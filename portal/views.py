@@ -18,7 +18,7 @@ from django.conf import settings
 from functools import wraps
 import datetime
 from email.mime.image import MIMEImage
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News
 import os
 
 
@@ -2912,6 +2912,273 @@ def api_delete_admission_note(request, note_id):
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# Admin-only CRUD operations for News
+@require_http_methods(["GET"])
+@login_required
+def api_admin_news(request):
+    """Get all news for admin (including inactive)"""
+    try:
+        news_list = News.objects.all().order_by('display_order', '-date')
+        news_data = []
+        for news in news_list:
+            news_item = {
+                'id': news.id,
+                'title': news.title,
+                'date': news.date.isoformat(),
+                'body': news.body,
+                'details': news.details,
+                'is_active': news.is_active,
+                'display_order': news.display_order,
+                'created_at': news.created_at.isoformat(),
+                'updated_at': news.updated_at.isoformat()
+            }
+            if news.image:
+                news_item['image'] = request.build_absolute_uri(news.image.url)
+            else:
+                news_item['image'] = None
+            news_data.append(news_item)
+        
+        return JsonResponse({
+            'status': 'success',
+            'news': news_data,
+            'count': len(news_data)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error fetching news: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required
+@permission_required('portal.add_news', raise_exception=True)
+def api_create_news(request):
+    """Create a new news article (Admin only)"""
+    try:
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            title = request.POST.get('title')
+            date = request.POST.get('date')
+            body = request.POST.get('body')
+            details = request.POST.get('details', '')
+            is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            display_order = int(request.POST.get('display_order', 0))
+            image = request.FILES.get('image')
+        else:
+            # Handle JSON (for backward compatibility, though image won't work)
+            data = json.loads(request.body)
+            title = data.get('title')
+            date = data.get('date')
+            body = data.get('body')
+            details = data.get('details', '')
+            is_active = data.get('is_active', True)
+            display_order = data.get('display_order', 0)
+            image = None
+        
+        # Validate required fields
+        if not title or not date or not body:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Fields "title", "date", and "body" are required'
+            }, status=400)
+        
+        # Create the news article
+        news = News.objects.create(
+            title=title,
+            date=_parse_date(date),
+            body=body,
+            details=details,
+            is_active=is_active,
+            display_order=display_order
+        )
+        
+        # Handle image upload if provided
+        if image:
+            news.image = image
+            news.save()
+        
+        news_data = {
+            'id': news.id,
+            'title': news.title,
+            'date': news.date.isoformat(),
+            'body': news.body,
+            'details': news.details,
+            'is_active': news.is_active,
+            'display_order': news.display_order,
+            'created_at': news.created_at.isoformat(),
+            'updated_at': news.updated_at.isoformat()
+        }
+        if news.image:
+            news_data['image'] = request.build_absolute_uri(news.image.url)
+        else:
+            news_data['image'] = None
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'News created successfully',
+            'news': news_data
+        }, status=201)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error creating news: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["PUT", "PATCH"])
+@csrf_exempt
+@login_required
+@permission_required('portal.change_news', raise_exception=True)
+def api_update_news(request, news_id):
+    """Update a news article (Admin only)"""
+    try:
+        news = get_object_or_404(News, id=news_id)
+        
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            title = request.POST.get('title')
+            date = request.POST.get('date')
+            body = request.POST.get('body')
+            details = request.POST.get('details', '')
+            is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            display_order = int(request.POST.get('display_order', 0))
+            image = request.FILES.get('image')
+            remove_image = request.POST.get('remove_image', 'false').lower() == 'true'
+        else:
+            # Handle JSON
+            data = json.loads(request.body)
+            title = data.get('title')
+            date = data.get('date')
+            body = data.get('body')
+            details = data.get('details', '')
+            is_active = data.get('is_active')
+            display_order = data.get('display_order')
+            image = None
+            remove_image = data.get('remove_image', False)
+        
+        # Update fields
+        if title is not None:
+            news.title = title
+        if date is not None:
+            news.date = _parse_date(date)
+        if body is not None:
+            news.body = body
+        if details is not None:
+            news.details = details
+        if is_active is not None:
+            news.is_active = is_active
+        if display_order is not None:
+            news.display_order = display_order
+        
+        # Handle image
+        if remove_image:
+            if news.image:
+                news.image.delete()
+            news.image = None
+        elif image:
+            # Delete old image if exists
+            if news.image:
+                news.image.delete()
+            news.image = image
+        
+        news.save()
+        
+        news_data = {
+            'id': news.id,
+            'title': news.title,
+            'date': news.date.isoformat(),
+            'body': news.body,
+            'details': news.details,
+            'is_active': news.is_active,
+            'display_order': news.display_order,
+            'created_at': news.created_at.isoformat(),
+            'updated_at': news.updated_at.isoformat()
+        }
+        if news.image:
+            news_data['image'] = request.build_absolute_uri(news.image.url)
+        else:
+            news_data['image'] = None
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'News updated successfully',
+            'news': news_data
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error updating news: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["DELETE"])
+@csrf_exempt
+@login_required
+@permission_required('portal.delete_news', raise_exception=True)
+def api_delete_news(request, news_id):
+    """Delete a news article (Admin only)"""
+    try:
+        news = get_object_or_404(News, id=news_id)
+        # Delete associated image if exists
+        if news.image:
+            news.image.delete()
+        news.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'News deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error deleting news: {str(e)}'
+        }, status=500)
+
+
+# Public API endpoint for News
+@require_http_methods(["GET"])
+def api_news(request):
+    """Get all active news articles"""
+    try:
+        news_list = News.objects.filter(is_active=True).order_by('display_order', '-date')
+        news_data = []
+        for news in news_list:
+            news_item = {
+                'id': news.id,
+                'title': news.title,
+                'date': news.date.isoformat(),
+                'body': news.body,
+                'details': news.details if news.details else news.body
+            }
+            if news.image:
+                news_item['image'] = request.build_absolute_uri(news.image.url)
+            news_data.append(news_item)
+        
+        return JsonResponse({
+            'status': 'success',
+            'news': news_data,
+            'count': len(news_data)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error fetching news: {str(e)}'
+        }, status=500)
 
 
 def _send_brevo_template(to_email: str, template_id: str, merge_data: dict) -> bool:

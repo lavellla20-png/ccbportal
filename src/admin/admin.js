@@ -28,6 +28,7 @@ const AdminPage = () => {
   const [events, setEvents] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [news, setNews] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [personnel, setPersonnel] = useState([]);
   const [admissionRequirements, setAdmissionRequirements] = useState([]);
@@ -43,11 +44,12 @@ const AdminPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [programsRes, eventsRes, achievementsRes, announcementsRes, departmentsRes, personnelRes, requirementsRes, stepsRes, notesRes] = await Promise.all([
+      const [programsRes, eventsRes, achievementsRes, announcementsRes, newsRes, departmentsRes, personnelRes, requirementsRes, stepsRes, notesRes] = await Promise.all([
         apiService.getAdminAcademicPrograms(),
         apiService.getAdminEvents(),
         apiService.getAdminAchievements(),
         apiService.getAdminAnnouncements(),
+        apiService.getAdminNews(),
         apiService.getAdminDepartments(),
         apiService.getAdminPersonnel(),
         apiService.getAdminAdmissionRequirements(),
@@ -59,6 +61,7 @@ const AdminPage = () => {
       setEvents(eventsRes.events || []);
       setAchievements(achievementsRes.achievements || []);
       setAnnouncements(announcementsRes.announcements || []);
+      setNews(newsRes.news || []);
       setDepartments(departmentsRes.departments || []);
       setPersonnel(personnelRes.personnel || []);
       setAdmissionRequirements(requirementsRes.requirements || []);
@@ -208,6 +211,9 @@ const AdminPage = () => {
     } else if (activeTab === 'admission-notes') {
       defaultFormData.is_active = true;
       defaultFormData.display_order = 0;
+    } else if (activeTab === 'news') {
+      defaultFormData.is_active = true;
+      defaultFormData.display_order = 0;
     }
     setFormData(defaultFormData);
     setShowForm(true);
@@ -253,6 +259,10 @@ const AdminPage = () => {
         case 'announcements':
           await apiService.deleteAnnouncement(item.id);
           setAnnouncements(prev => prev.filter(a => a.id !== item.id));
+          break;
+        case 'news':
+          await apiService.deleteNews(item.id);
+          setNews(prev => prev.filter(n => n.id !== item.id));
           break;
         // removed 'admissions-dates' case
         case 'departments':
@@ -479,6 +489,34 @@ const AdminPage = () => {
             setAdmissionNotes(prev => [...prev, result.note]);
           }
           break;
+        case 'news':
+          // Prepare FormData for file upload
+          const newsFormData = new FormData();
+          newsFormData.append('title', formData.title || '');
+          newsFormData.append('date', formData.date || '');
+          newsFormData.append('body', formData.body || '');
+          newsFormData.append('details', formData.details || '');
+          newsFormData.append('is_active', formData.is_active ? 'true' : 'false');
+          newsFormData.append('display_order', formData.display_order || 0);
+          
+          // Handle image upload
+          if (formData.image && formData.image instanceof File) {
+            newsFormData.append('image', formData.image);
+          }
+          
+          // Handle image removal
+          if (formData.remove_image) {
+            newsFormData.append('remove_image', 'true');
+          }
+          
+          if (isEditing) {
+            result = await apiService.updateNews(editingItem.id, newsFormData);
+            setNews(prev => prev.map(n => n.id === editingItem.id ? result.news : n));
+          } else {
+            result = await apiService.createNews(newsFormData);
+            setNews(prev => [...prev, result.news]);
+          }
+          break;
         default:
           throw new Error(`Unknown active tab: ${activeTab}`);
       }
@@ -498,11 +536,18 @@ const AdminPage = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'file') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0] || null
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const renderDashboard = () => (
@@ -537,6 +582,13 @@ const AdminPage = () => {
           <div className="stat-content">
             <h3>{announcements.length}</h3>
             <p>Announcements</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon"><i className="fas fa-newspaper"></i></div>
+          <div className="stat-content">
+            <h3>{news.length}</h3>
+            <p>News</p>
           </div>
         </div>
         {/* Removed Admissions Dates stat card */}
@@ -684,6 +736,8 @@ const AdminPage = () => {
         return ['Title', 'Date', 'Category', 'Status'];
       case 'announcements':
         return ['Title', 'Date', 'Status'];
+      case 'news':
+        return ['Title', 'Date', 'Image', 'Status'];
       // removed 'admissions-dates'
       case 'departments':
         return ['Name', 'Type', 'Head', 'Office', 'Status'];
@@ -729,6 +783,13 @@ const AdminPage = () => {
         return [
           item.title || 'N/A',
           item.date || 'N/A',
+          item.is_active ? 'Active' : 'Inactive'
+        ];
+      case 'news':
+        return [
+          item.title || 'N/A',
+          item.date || 'N/A',
+          item.image ? 'Yes' : 'No',
           item.is_active ? 'Active' : 'Inactive'
         ];
       // removed 'admissions-dates'
@@ -804,6 +865,7 @@ const AdminPage = () => {
       { key: 'events', label: 'Events', icon: 'fas fa-calendar-alt' },
       { key: 'achievements', label: 'Achievements', icon: 'fas fa-trophy' },
       { key: 'announcements', label: 'Announcements', icon: 'fas fa-bullhorn' },
+      { key: 'news', label: 'News', icon: 'fas fa-newspaper' },
       { key: 'departments', label: 'Departments', icon: 'fas fa-building' },
       { key: 'personnel', label: 'Personnel', icon: 'fas fa-users' },
       { key: 'admission-requirements', label: 'Admission Requirements', icon: 'fas fa-file-alt' },
@@ -1700,6 +1762,116 @@ const AdminPage = () => {
             </div>
           </>
         );
+      case 'news':
+        return (
+          <>
+            <div className="form-group">
+              <label>Title *</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Date *</label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Body *</label>
+              <textarea
+                name="body"
+                value={formData.body || ''}
+                onChange={handleInputChange}
+                required
+                rows="4"
+                placeholder="Enter news content"
+              />
+            </div>
+            <div className="form-group">
+              <label>Details</label>
+              <textarea
+                name="details"
+                value={formData.details || ''}
+                onChange={handleInputChange}
+                rows="4"
+                placeholder="Enter full details (optional)"
+              />
+            </div>
+            <div className="form-group">
+              <label>Image</label>
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleInputChange}
+              />
+              {formData.image && formData.image instanceof File && (
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{ color: '#666', fontSize: '0.9rem' }}>Selected: {formData.image.name}</p>
+                  <img 
+                    src={URL.createObjectURL(formData.image)} 
+                    alt="Preview" 
+                    style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
+              {editingItem && editingItem.image && !formData.image && (
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{ color: '#666', fontSize: '0.9rem' }}>Current image:</p>
+                  <img 
+                    src={editingItem.image} 
+                    alt="Current" 
+                    style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
+                  />
+                  <label className="checkbox-label" style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      name="remove_image"
+                      checked={formData.remove_image || false}
+                      onChange={handleInputChange}
+                    />
+                    Remove current image
+                  </label>
+                </div>
+              )}
+              <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                Upload an image for this news article. Recommended size: 800x600px or larger.
+              </small>
+            </div>
+            <div className="form-row-inline">
+              <div className="form-group">
+                <label>Display Order</label>
+                <input
+                  type="number"
+                  name="display_order"
+                  value={formData.display_order || 0}
+                  onChange={handleInputChange}
+                  min="0"
+                />
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={formData.is_active || false}
+                    onChange={handleInputChange}
+                  />
+                  Active
+                </label>
+              </div>
+            </div>
+          </>
+        );
       default:
         return null;
     }
@@ -1829,6 +2001,7 @@ const AdminPage = () => {
             {activeTab === 'events' && renderDataTable(events, 'events')}
             {activeTab === 'achievements' && renderDataTable(achievements, 'achievements')}
             {activeTab === 'announcements' && renderDataTable(announcements, 'announcements')}
+            {activeTab === 'news' && renderDataTable(news, 'news')}
             {activeTab === 'departments' && renderDataTable(departments, 'departments')}
             {activeTab === 'personnel' && renderDataTable(personnel, 'personnel')}
             {activeTab === 'admission-requirements' && renderDataTable(admissionRequirements, 'admission-requirements')}

@@ -368,3 +368,24 @@ class AdmissionNote(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class News(models.Model):
+    """Model for news articles with images"""
+    title = models.CharField(max_length=200, help_text="News title")
+    date = models.DateField(help_text="Publication date")
+    body = models.TextField(help_text="News content")
+    details = models.TextField(blank=True, help_text="Full details shown in modal; falls back to body if empty")
+    image = models.ImageField(upload_to='news/', blank=True, null=True, help_text="News image")
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order', '-date', 'title']
+        verbose_name = 'News'
+        verbose_name_plural = 'News'
+
+    def __str__(self):
+        return f"{self.title} ({self.date})"

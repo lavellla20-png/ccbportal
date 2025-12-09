@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News
 
 # Register your models here.
 admin.site.register(AcademicProgram)
@@ -129,3 +129,26 @@ class AdmissionNoteAdmin(admin.ModelAdmin):
     def note_text_short(self, obj):
         return obj.note_text[:80] + '...' if len(obj.note_text) > 80 else obj.note_text
     note_text_short.short_description = 'Note'
+
+@admin.register(News)
+class NewsAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date', 'has_image', 'is_active', 'display_order')
+    list_filter = ('is_active', 'date')
+    search_fields = ('title', 'body', 'details')
+    ordering = ('display_order', '-date')
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'date', 'body', 'details')
+        }),
+        ('Image', {
+            'fields': ('image',)
+        }),
+        ('Display Settings', {
+            'fields': ('is_active', 'display_order')
+        }),
+    )
+    
+    def has_image(self, obj):
+        return 'Yes' if obj.image else 'No'
+    has_image.short_description = 'Has Image'
+    has_image.boolean = False

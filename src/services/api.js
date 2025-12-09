@@ -75,6 +75,11 @@ class ApiService {
         return this.makeRequest('/achievements/');
     }
 
+    // Get news
+    async getNews() {
+        return this.makeRequest('/news/');
+    }
+
     // Dynamic search across all content
     async search(query) {
         return this.makeRequest(`/search/?q=${encodeURIComponent(query)}`);
@@ -237,6 +242,11 @@ class ApiService {
         return this.makeRequest('/admin/announcements/');
     }
 
+    // Admin: Get all news (including inactive)
+    async getAdminNews() {
+        return this.makeRequest('/admin/news/');
+    }
+
     // Removed admissions important dates functionality
 
     // Admin: Academic Programs CRUD
@@ -360,6 +370,79 @@ class ApiService {
 
     async deletePersonnel(personnelId) {
         return this.makeRequest(`/admin/personnel/${personnelId}/delete/`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Admin: News CRUD
+    async createNews(formData) {
+        // Use FormData for file uploads
+        const url = `${this.baseURL}/admin/news/create/`;
+        const config = {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
+        };
+
+        try {
+            const response = await fetch(url, config);
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try { data = await response.json(); } catch (_) { /* ignore */ }
+            }
+
+            if (!response.ok) {
+                const message = (data && (data.message || data.detail || data.error)) || `HTTP error! status: ${response.status}`;
+                const err = new Error(message);
+                err.status = response.status;
+                err.data = data;
+                throw err;
+            }
+
+            return data || await response.json();
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
+        }
+    }
+
+    async updateNews(newsId, formData) {
+        // Use FormData for file uploads
+        const url = `${this.baseURL}/admin/news/${newsId}/`;
+        const config = {
+            method: 'PUT',
+            body: formData,
+            credentials: 'include',
+            // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
+        };
+
+        try {
+            const response = await fetch(url, config);
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try { data = await response.json(); } catch (_) { /* ignore */ }
+            }
+
+            if (!response.ok) {
+                const message = (data && (data.message || data.detail || data.error)) || `HTTP error! status: ${response.status}`;
+                const err = new Error(message);
+                err.status = response.status;
+                err.data = data;
+                throw err;
+            }
+
+            return data || await response.json();
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
+        }
+    }
+
+    async deleteNews(newsId) {
+        return this.makeRequest(`/admin/news/${newsId}/delete/`, {
             method: 'DELETE',
         });
     }

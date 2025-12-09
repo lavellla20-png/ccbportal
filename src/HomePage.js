@@ -44,19 +44,17 @@ const HomePage = () => {
   const [newsError, setNewsError] = useState("");
   const [newsLoading, setNewsLoading] = useState(true);
 
-  // Carousel state
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
 
-  // Load announcements, events, achievements for carousel
+  // Load announcements, events, achievements, and news for carousel
   useEffect(() => {
     const loadAll = async () => {
       try {
         setNewsLoading(true);
-        const [annRes, evtRes, achRes] = await Promise.all([
+        const [annRes, evtRes, achRes, newsRes] = await Promise.all([
           apiService.getAnnouncements(),
           apiService.getEvents(),
           apiService.getAchievements(),
+          apiService.getNews(),
         ]);
 
         const annsAll =
@@ -116,9 +114,70 @@ const HomePage = () => {
           .sort((x, y) => new Date(y.date) - new Date(x.date))
           .slice(0, 2);
 
-        const combined = [...anns, ...evts, ...achs].sort(
+        // Process news items
+        const newsAll =
+          newsRes.status === "success" && Array.isArray(newsRes.news)
+            ? newsRes.news.map((n) => ({
+                id: `n-${n.id}`,
+                type: "news",
+                badge: "News",
+                date: n.date,
+                title: n.title,
+                description:
+                  (n.details && n.details.trim().length > 0
+                    ? n.details
+                    : n.body) || "",
+                image: n.image || null,
+                link: "/news",
+              }))
+            : [];
+        
+        // Combine all items and sort by date
+        const allItems = [...anns, ...evts, ...achs, ...newsAll].sort(
           (x, y) => new Date(y.date) - new Date(x.date)
         );
+        
+        // Separate items with images (news items with images) from text-only items
+        const itemsWithImages = allItems.filter(item => item.image && item.type === "news");
+        const textOnlyItems = allItems.filter(item => !item.image || item.type !== "news");
+        
+        // Sort both groups by date
+        itemsWithImages.sort((x, y) => new Date(y.date) - new Date(x.date));
+        textOnlyItems.sort((x, y) => new Date(y.date) - new Date(x.date));
+        
+        // Build the layout matching the image pattern:
+        // Row 1: TEXT BOX, IMAGE NEWS, TEXT BOX
+        // Row 2: IMAGE NEWS, TEXT BOX, IMAGE NEWS
+        // Indices: 0=TEXT, 1=IMAGE, 2=TEXT, 3=IMAGE, 4=TEXT, 5=IMAGE
+        const combined = [];
+        let imageIndex = 0;
+        let textIndex = 0;
+        
+        for (let i = 0; i < 6; i++) {
+          const isImageSlot = i === 1 || i === 3 || i === 5;
+          
+          if (isImageSlot) {
+            // Image slots: prioritize news items with images
+            if (imageIndex < itemsWithImages.length) {
+              combined.push(itemsWithImages[imageIndex]);
+              imageIndex++;
+            } else if (textIndex < textOnlyItems.length) {
+              // Fallback to text item if no images available
+              combined.push(textOnlyItems[textIndex]);
+              textIndex++;
+            }
+          } else {
+            // Text slots: use text-only items
+            if (textIndex < textOnlyItems.length) {
+              combined.push(textOnlyItems[textIndex]);
+              textIndex++;
+            } else if (imageIndex < itemsWithImages.length) {
+              // Fallback to image item if no text items available
+              combined.push(itemsWithImages[imageIndex]);
+              imageIndex++;
+            }
+          }
+        }
 
         setNewsData(combined);
       } catch (e) {
@@ -129,17 +188,6 @@ const HomePage = () => {
     };
     loadAll();
   }, []);
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (!isPaused && newsData.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % newsData.length);
-      }, 4000); // Change slide every 4 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [isPaused, newsData.length]);
 
   // Intersection Observer for features-grid section
   useEffect(() => {
@@ -224,21 +272,6 @@ const HomePage = () => {
       flickerSpeed: 0.3 + Math.random() * 0.4, // flicker speed (0.3s – 0.7s)
     }))
   );
-
-  // Navigation functions
-  const goToPrevious = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? newsData.length - 1 : prevIndex - 1
-    );
-  };
-
-  const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % newsData.length);
-  };
-
-  const goToSlide = (index) => {
-    setCurrentIndex(index);
-  };
 
   // Handle audio enable button click
   const handleEnableAudio = () => {
@@ -917,37 +950,103 @@ const HomePage = () => {
         <div className="news-section">
           <div className="container">
             <h2 className="section-title">Latest News & Updates</h2>
-            <div
-              className="news-carousel-container"
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-            >
-              <div className="news-carousel">
-                <div
-                  className="news-carousel-track"
-                  style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-                >
-                  {newsLoading ? (
-                    <div className="news-carousel-slide">
-                      <div className="news-card">
-                        <p style={{ color: "#fff" }}>Loading latest news...</p>
-                      </div>
-                    </div>
-                  ) : newsError ? (
-                    <div className="news-carousel-slide">
-                      <div className="news-card">
-                        <p>{newsError}</p>
-                      </div>
-                    </div>
-                  ) : newsData.length === 0 ? (
-                    <div className="news-carousel-slide">
-                      <div className="news-card">
-                        <p>No announcements yet. Check back soon.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    newsData.map((news, index) => (
-                      <div key={news.id} className="news-carousel-slide">
+            {newsLoading ? (
+              <div className="news-grid-layout">
+                <div className="news-grid-item">
+                  <div className="news-card">
+                    <p style={{ color: "#fff" }}>Loading latest news...</p>
+                  </div>
+                </div>
+              </div>
+            ) : newsError ? (
+              <div className="news-grid-layout">
+                <div className="news-grid-item">
+                  <div className="news-card">
+                    <p>{newsError}</p>
+                  </div>
+                </div>
+              </div>
+            ) : newsData.length === 0 ? (
+              <div className="news-grid-layout">
+                <div className="news-grid-item">
+                  <div className="news-card">
+                    <p>No announcements yet. Check back soon.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="news-grid-layout">
+                {newsData.slice(0, 6).map((news, index) => {
+                  // Pattern matching the image layout:
+                  // Row 1: TEXT BOX (0), IMAGE NEWS (1), TEXT BOX (2)
+                  // Row 2: IMAGE NEWS (3), TEXT BOX (4), IMAGE NEWS (5)
+                  // Image slots are at indices 1, 3, 5 - always show as image cards
+                  const imageSlots = [1, 3, 5];
+                  const isImageSlot = imageSlots.includes(index);
+                  // Always show as image card if it's an image slot position
+                  const isImageNews = isImageSlot;
+                  
+                  return (
+                    <div
+                      key={news.id}
+                      className={`news-grid-item ${
+                        isImageNews ? "news-image-item" : "news-text-item"
+                      }`}
+                    >
+                      {isImageNews ? (
+                        <div className="news-card-image">
+                          <div className="news-image-wrapper">
+                            {news.image ? (
+                              <img 
+                                src={news.image} 
+                                alt={news.title}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover'
+                                }}
+                              />
+                            ) : (
+                              <div className="news-image-placeholder">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  width="48"
+                                  height="48"
+                                  fill="currentColor"
+                                  opacity="0.3"
+                                >
+                                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="news-card-content">
+                            <div
+                              className={`news-type-badge ${
+                                news.type === "announcement"
+                                  ? "type-announcement"
+                                  : news.type === "event"
+                                  ? "type-event"
+                                  : news.type === "news"
+                                  ? "type-news"
+                                  : "type-achievement"
+                              }`}
+                            >
+                              {news.badge}
+                            </div>
+                            <div className="news-date">
+                              {formatMonthYear(news.date)}
+                            </div>
+                            <h3 className="news-title">{news.title}</h3>
+                            <p className="news-summary">
+                              {truncate(news.description, 120)}
+                            </p>
+                            <a href={news.link} className="news-link">
+                              Read More →
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
                         <div className="news-card">
                           <div
                             className={`news-type-badge ${
@@ -955,6 +1054,8 @@ const HomePage = () => {
                                 ? "type-announcement"
                                 : news.type === "event"
                                 ? "type-event"
+                                : news.type === "news"
+                                ? "type-news"
                                 : "type-achievement"
                             }`}
                           >
@@ -965,48 +1066,18 @@ const HomePage = () => {
                           </div>
                           <h3 className="news-title">{news.title}</h3>
                           <p className="news-summary">
-                            {truncate(news.description, 160)}
+                            {truncate(news.description, 200)}
                           </p>
                           <a href={news.link} className="news-link">
                             Read More →
                           </a>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* Navigation buttons */}
-              <button
-                className="carousel-btn carousel-btn-prev"
-                onClick={goToPrevious}
-                aria-label="Previous news"
-              >
-                &#8249;
-              </button>
-              <button
-                className="carousel-btn carousel-btn-next"
-                onClick={goToNext}
-                aria-label="Next news"
-              >
-                &#8250;
-              </button>
-
-              {/* Dots indicator */}
-              <div className="carousel-dots">
-                {newsData.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`carousel-dot ${
-                      index === currentIndex ? "active" : ""
-                    }`}
-                    onClick={() => goToSlide(index)}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
