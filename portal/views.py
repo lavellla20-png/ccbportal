@@ -18,7 +18,7 @@ from django.conf import settings
 from functools import wraps
 import datetime
 from email.mime.image import MIMEImage
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo
 import os
 
 
@@ -3178,6 +3178,129 @@ def api_news(request):
         return JsonResponse({
             'status': 'error',
             'message': f'Error fetching news: {str(e)}'
+        }, status=500)
+
+
+# Institutional Info API endpoints
+
+@require_http_methods(["GET"])
+def api_institutional_info(request):
+    """Get active institutional information (Mission, Vision, Goals, Core Values)"""
+    try:
+        info = InstitutionalInfo.objects.filter(is_active=True).first()
+        if not info:
+            # Return default empty structure if no active info exists
+            return JsonResponse({
+                'status': 'success',
+                'institutional_info': {
+                    'id': None,
+                    'vision': '',
+                    'mission': '',
+                    'goals': '',
+                    'core_values': ''
+                }
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'institutional_info': {
+                'id': info.id,
+                'vision': info.vision,
+                'mission': info.mission,
+                'goals': info.goals,
+                'core_values': info.core_values,
+                'updated_at': info.updated_at.isoformat()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error fetching institutional information: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+@login_required_json
+def api_admin_institutional_info(request):
+    """Get institutional information for admin (includes inactive)"""
+    try:
+        info = InstitutionalInfo.objects.first()
+        if not info:
+            return JsonResponse({
+                'status': 'success',
+                'institutional_info': None
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'institutional_info': {
+                'id': info.id,
+                'vision': info.vision,
+                'mission': info.mission,
+                'goals': info.goals,
+                'core_values': info.core_values,
+                'is_active': info.is_active,
+                'created_at': info.created_at.isoformat(),
+                'updated_at': info.updated_at.isoformat()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error fetching institutional information: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["POST", "PUT"])
+@csrf_exempt
+@login_required_json
+def api_update_institutional_info(request):
+    """Create or update institutional information (Admin only)"""
+    try:
+        data = json.loads(request.body)
+        
+        # Get existing record or create new
+        info, created = InstitutionalInfo.objects.get_or_create(
+            defaults={
+                'vision': data.get('vision', ''),
+                'mission': data.get('mission', ''),
+                'goals': data.get('goals', ''),
+                'core_values': data.get('core_values', ''),
+                'is_active': data.get('is_active', True)
+            }
+        )
+        
+        if not created:
+            # Update existing record
+            info.vision = data.get('vision', info.vision)
+            info.mission = data.get('mission', info.mission)
+            info.goals = data.get('goals', info.goals)
+            info.core_values = data.get('core_values', info.core_values)
+            info.is_active = data.get('is_active', info.is_active)
+            info.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Institutional information saved successfully',
+            'institutional_info': {
+                'id': info.id,
+                'vision': info.vision,
+                'mission': info.mission,
+                'goals': info.goals,
+                'core_values': info.core_values,
+                'is_active': info.is_active,
+                'updated_at': info.updated_at.isoformat()
+            }
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error saving institutional information: {str(e)}'
         }, status=500)
 
 

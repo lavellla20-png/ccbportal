@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import apiService from './services/api';
 import './aboutus.css';
 
 const AboutUs = () => {
@@ -10,6 +11,15 @@ const AboutUs = () => {
   const [activeSection, setActiveSection] = useState('history');
   const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState(null);
+  const [institutionalInfo, setInstitutionalInfo] = useState({
+    vision: '',
+    mission: '',
+    goals: '',
+    core_values: ''
+  });
+  const [loadingInfo, setLoadingInfo] = useState(true);
+  const [personnel, setPersonnel] = useState([]);
+  const [loadingPersonnel, setLoadingPersonnel] = useState(true);
 
   // Animation states
   const [isMissionContentVisible, setIsMissionContentVisible] = useState(false);
@@ -179,6 +189,83 @@ const AboutUs = () => {
     };
   }, []);
 
+  // Fetch institutional information on component mount
+  useEffect(() => {
+    const fetchInstitutionalInfo = async () => {
+      try {
+        setLoadingInfo(true);
+        const response = await apiService.getInstitutionalInfo();
+        if (response.status === 'success' && response.institutional_info) {
+          setInstitutionalInfo({
+            vision: response.institutional_info.vision || '',
+            mission: response.institutional_info.mission || '',
+            goals: response.institutional_info.goals || '',
+            core_values: response.institutional_info.core_values || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching institutional information:', error);
+      } finally {
+        setLoadingInfo(false);
+      }
+    };
+
+    fetchInstitutionalInfo();
+  }, []);
+
+  // Fetch personnel data on component mount
+  useEffect(() => {
+    const fetchPersonnel = async () => {
+      try {
+        setLoadingPersonnel(true);
+        const response = await apiService.getPersonnel();
+        if (response.status === 'success' && response.personnel) {
+          setPersonnel(response.personnel || []);
+        }
+      } catch (error) {
+        console.error('Error fetching personnel:', error);
+      } finally {
+        setLoadingPersonnel(false);
+      }
+    };
+
+    fetchPersonnel();
+  }, []);
+
+  // Filter personnel into executive officers and department heads
+  const getExecutiveOfficers = () => {
+    return personnel.filter(person => {
+      const title = (person.title || '').toLowerCase();
+      return title.includes('president') || 
+             title.includes('vice president') || 
+             title.includes('vp ') ||
+             title.includes('vp for') ||
+             title.includes('executive');
+    }).sort((a, b) => {
+      // Sort by title priority: President first, then VPs
+      const aTitle = (a.title || '').toLowerCase();
+      const bTitle = (b.title || '').toLowerCase();
+      if (aTitle.includes('president') && !aTitle.includes('vice')) return -1;
+      if (bTitle.includes('president') && !bTitle.includes('vice')) return 1;
+      return (a.title || '').localeCompare(b.title || '');
+    });
+  };
+
+  const getDepartmentHeads = () => {
+    return personnel.filter(person => {
+      const title = (person.title || '').toLowerCase();
+      return title.includes('dean') || 
+             title.includes('head') || 
+             title.includes('director') ||
+             title.includes('chair');
+    }).sort((a, b) => {
+      // Sort by department name, then by title
+      const deptCompare = (a.department_name || '').localeCompare(b.department_name || '');
+      if (deptCompare !== 0) return deptCompare;
+      return (a.title || '').localeCompare(b.title || '');
+    });
+  };
+
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
@@ -333,9 +420,9 @@ const AboutUs = () => {
             <div className="mission-card" role="button" tabIndex={0}
                  onClick={() => openMissionModal({
                    title: 'Vision',
-                   content: 'By 2034, City College of Bayawan is the leading tertiary institution in the southern part of Negros Island Region.'
+                   content: institutionalInfo.vision || 'By 2034, City College of Bayawan is the leading tertiary institution in the southern part of Negros Island Region.'
                  })}
-                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Vision', content: 'By 2034, City College of Bayawan is the leading tertiary institution in the southern part of Negros Island Region.' }); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Vision', content: institutionalInfo.vision || 'By 2034, City College of Bayawan is the leading tertiary institution in the southern part of Negros Island Region.' }); }}
             >
               <div className="mission-icon">
                 <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
@@ -344,16 +431,16 @@ const AboutUs = () => {
               </div>
               <h3>Vision</h3>
               <p>
-                By 2034, City College of Bayawan is the leading tertiary institution in the southern part of Negros Island Region.
+                {institutionalInfo.vision || 'By 2034, City College of Bayawan is the leading tertiary institution in the southern part of Negros Island Region.'}
               </p>
             </div>
             
             <div className="mission-card" role="button" tabIndex={0}
                  onClick={() => openMissionModal({
                    title: 'Mission',
-                   content: 'City College of Bayawan is a center of quality education committed to produce innovative, service-oriented, and globally competitive graduates.'
+                   content: institutionalInfo.mission || 'City College of Bayawan is a center of quality education committed to produce innovative, service-oriented, and globally competitive graduates.'
                  })}
-                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Mission', content: 'City College of Bayawan is a center of quality education committed to produce innovative, service-oriented, and globally competitive graduates.' }); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Mission', content: institutionalInfo.mission || 'City College of Bayawan is a center of quality education committed to produce innovative, service-oriented, and globally competitive graduates.' }); }}
             >
               <div className="mission-icon">
                 <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
@@ -362,16 +449,16 @@ const AboutUs = () => {
               </div>
               <h3>Mission</h3>
               <p>
-                City College of Bayawan is a center of quality education committed to produce innovative, service-oriented, and globally competitive graduates.
+                {institutionalInfo.mission || 'City College of Bayawan is a center of quality education committed to produce innovative, service-oriented, and globally competitive graduates.'}
               </p>
             </div>
             
             <div className="mission-card" role="button" tabIndex={0}
                  onClick={() => openMissionModal({
                    title: 'Core Values',
-                   content: 'The City College of Bayawan adheres to: CHARACTER, COMPETENCE, BANKABILITY.'
+                   content: institutionalInfo.core_values || 'The City College of Bayawan adheres to: CHARACTER, COMPETENCE, BANKABILITY.'
                  })}
-                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Core Values', content: 'The City College of Bayawan adheres to: CHARACTER, COMPETENCE, BANKABILITY.' }); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Core Values', content: institutionalInfo.core_values || 'The City College of Bayawan adheres to: CHARACTER, COMPETENCE, BANKABILITY.' }); }}
             >
               <div className="mission-icon">
                 <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
@@ -380,25 +467,31 @@ const AboutUs = () => {
               </div>
               <h3>Core Values</h3>
               <div className="values-list">
-                <p>The City College of Bayawan adheres to the following core values:</p>
-                <div className="value-item">
-                  <strong>C</strong> - CHARACTER
-                </div>
-                <div className="value-item">
-                  <strong>C</strong> - COMPETENCE
-                </div>
-                <div className="value-item">
-                  <strong>B</strong> - BANKABILITY
-                </div>
+                {institutionalInfo.core_values ? (
+                  <div dangerouslySetInnerHTML={{ __html: institutionalInfo.core_values.replace(/\n/g, '<br/>') }} />
+                ) : (
+                  <>
+                    <p>The City College of Bayawan adheres to the following core values:</p>
+                    <div className="value-item">
+                      <strong>C</strong> - CHARACTER
+                    </div>
+                    <div className="value-item">
+                      <strong>C</strong> - COMPETENCE
+                    </div>
+                    <div className="value-item">
+                      <strong>B</strong> - BANKABILITY
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="mission-card-goals" role="button" tabIndex={0}
                  onClick={() => openMissionModal({
                    title: 'Goals',
-                   content: 'A committed and highly qualified academic community; A high-quality and relevant programs; A culture of excellence and innovation; The generation and transference of knowledge; An impact on improving quality of life and sustainable development.'
+                   content: institutionalInfo.goals || 'A committed and highly qualified academic community; A high-quality and relevant programs; A culture of excellence and innovation; The generation and transference of knowledge; An impact on improving quality of life and sustainable development.'
                  })}
-                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Goals', content: 'A committed and highly qualified academic community; A high-quality and relevant programs; A culture of excellence and innovation; The generation and transference of knowledge; An impact on improving quality of life and sustainable development.' }); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter') openMissionModal({ title: 'Goals', content: institutionalInfo.goals || 'A committed and highly qualified academic community; A high-quality and relevant programs; A culture of excellence and innovation; The generation and transference of knowledge; An impact on improving quality of life and sustainable development.' }); }}
             >
               <div className="mission-icon">
                 <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
@@ -408,36 +501,49 @@ const AboutUs = () => {
               <h3>Goals</h3>
               <p>The City College of Bayawan by 2029 will be known by having:</p>
               <ul className="goals-list">
-                <li>
-                  <span className="goal-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
-                  </span>
-                  A committed and highly qualified academic community true to its original objectives;
-                </li>
-                <li>
-                  <span className="goal-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
-                  </span>
-                  A high-quality and relevant undergraduates and professional academic program immersed in a globalized and localized context, inclusive to all regardless of economic and social condition;
-                </li>
-                <li>
-                  <span className="goal-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
-                  </span>
-                  A culture of excellence, quality and innovation in its academic and administrative processes;
-                </li>
-                <li>
-                  <span className="goal-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
-                  </span>
-                  The generation and transference of knowledge with scientific and technological pertinent contributions; and
-                </li>
-                <li>
-                  <span className="goal-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
-                  </span>
-                  An impact on improving the quality of people’s lives, ratifying its commitment to society and constructing a country that lives around peace and sustainable development.
-                </li>
+                {institutionalInfo.goals ? (
+                  institutionalInfo.goals.split('\n').filter(goal => goal.trim()).map((goal, index) => (
+                    <li key={index}>
+                      <span className="goal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
+                      </span>
+                      {goal.trim()}
+                    </li>
+                  ))
+                ) : (
+                  <>
+                    <li>
+                      <span className="goal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
+                      </span>
+                      A committed and highly qualified academic community true to its original objectives;
+                    </li>
+                    <li>
+                      <span className="goal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
+                      </span>
+                      A high-quality and relevant undergraduates and professional academic program immersed in a globalized and localized context, inclusive to all regardless of economic and social condition;
+                    </li>
+                    <li>
+                      <span className="goal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
+                      </span>
+                      A culture of excellence, quality and innovation in its academic and administrative processes;
+                    </li>
+                    <li>
+                      <span className="goal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
+                      </span>
+                      The generation and transference of knowledge with scientific and technological pertinent contributions; and
+                    </li>
+                    <li>
+                      <span className="goal-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z"/></svg>
+                      </span>
+                      An impact on improving the quality of people's lives, ratifying its commitment to society and constructing a country that lives around peace and sustainable development.
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
 
@@ -517,108 +623,70 @@ const AboutUs = () => {
           <div className="officers-content">
             <div className="officers-category">
               <h3>Executive Officers</h3>
-              <div className={`executive-grid ${isExecutiveGridVisible ? 'fade-in-visible' : ''}`}>
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Dr. [Name]</h4>
-                    <p className="officer-position">College President</p>
-                    <p className="officer-contact">📧 president@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
+              {loadingPersonnel ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  Loading executive officers...
                 </div>
-                
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Dr. [Name]</h4>
-                    <p className="officer-position">Vice President for Academic Affairs</p>
-                    <p className="officer-contact">📧 vpaa@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
+              ) : getExecutiveOfficers().length > 0 ? (
+                <div className={`executive-grid ${isExecutiveGridVisible ? 'fade-in-visible' : ''}`}>
+                  {getExecutiveOfficers().map((officer) => (
+                    <div key={officer.id} className="officer-card">
+                      <div className="officer-photo">
+                        <div className="photo-placeholder"></div>
+                      </div>
+                      <div className="officer-info">
+                        <h4>{officer.full_name || 'N/A'}</h4>
+                        <p className="officer-position">{officer.title || 'N/A'}</p>
+                        {officer.email && (
+                          <p className="officer-contact">📧 {officer.email}</p>
+                        )}
+                        {officer.phone && (
+                          <p className="officer-contact">📞 {officer.phone}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Dr. [Name]</h4>
-                    <p className="officer-position">Vice President for Administration</p>
-                    <p className="officer-contact">📧 vpa@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  No executive officers found.
                 </div>
-                
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Dr. [Name]</h4>
-                    <p className="officer-position">Vice President for Student Affairs</p>
-                    <p className="officer-contact">📧 vpsa@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
             
             <div className="officers-category">
               <h3>Department Heads</h3>
-              <div className={`departments-grid ${isDepartmentsGridVisible ? 'fade-in-visible' : ''}`}>
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Prof. [Name]</h4>
-                    <p className="officer-position">Dean, Business Administration</p>
-                    <p className="officer-contact">📧 business@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
+              {loadingPersonnel ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  Loading department heads...
                 </div>
-                
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Prof. [Name]</h4>
-                    <p className="officer-position">Dean, Information Technology</p>
-                    <p className="officer-contact">📧 it@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
+              ) : getDepartmentHeads().length > 0 ? (
+                <div className={`departments-grid ${isDepartmentsGridVisible ? 'fade-in-visible' : ''}`}>
+                  {getDepartmentHeads().map((head) => (
+                    <div key={head.id} className="officer-card">
+                      <div className="officer-photo">
+                        <div className="photo-placeholder"></div>
+                      </div>
+                      <div className="officer-info">
+                        <h4>{head.full_name || 'N/A'}</h4>
+                        <p className="officer-position">
+                          {head.department_name ? `${head.title || ''}, ${head.department_name}` : (head.title || 'N/A')}
+                        </p>
+                        {head.email && (
+                          <p className="officer-contact">📧 {head.email}</p>
+                        )}
+                        {head.phone && (
+                          <p className="officer-contact">📞 {head.phone}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Prof. [Name]</h4>
-                    <p className="officer-position">Dean, Education</p>
-                    <p className="officer-contact">📧 education@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  No department heads found.
                 </div>
-                
-                <div className="officer-card">
-                  <div className="officer-photo">
-                    <div className="photo-placeholder"></div>
-                  </div>
-                  <div className="officer-info">
-                    <h4>Prof. [Name]</h4>
-                    <p className="officer-position">Dean, Hospitality Management</p>
-                    <p className="officer-contact">📧 hospitality@ccb.edu.ph</p>
-                    <p className="officer-contact">📞 (035) XXX-XXXX</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

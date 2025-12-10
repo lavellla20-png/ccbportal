@@ -34,6 +34,7 @@ const AdminPage = () => {
   const [admissionRequirements, setAdmissionRequirements] = useState([]);
   const [enrollmentSteps, setEnrollmentSteps] = useState([]);
   const [admissionNotes, setAdmissionNotes] = useState([]);
+  const [institutionalInfo, setInstitutionalInfo] = useState(null);
 
   // Form states
   const [showForm, setShowForm] = useState(false);
@@ -44,7 +45,7 @@ const AdminPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [programsRes, eventsRes, achievementsRes, announcementsRes, newsRes, departmentsRes, personnelRes, requirementsRes, stepsRes, notesRes] = await Promise.all([
+      const [programsRes, eventsRes, achievementsRes, announcementsRes, newsRes, departmentsRes, personnelRes, requirementsRes, stepsRes, notesRes, institutionalInfoRes] = await Promise.all([
         apiService.getAdminAcademicPrograms(),
         apiService.getAdminEvents(),
         apiService.getAdminAchievements(),
@@ -54,7 +55,8 @@ const AdminPage = () => {
         apiService.getAdminPersonnel(),
         apiService.getAdminAdmissionRequirements(),
         apiService.getAdminEnrollmentSteps(),
-        apiService.getAdminAdmissionNotes()
+        apiService.getAdminAdmissionNotes(),
+        apiService.getAdminInstitutionalInfo()
       ]);
 
       setAcademicPrograms(programsRes.programs || []);
@@ -67,6 +69,7 @@ const AdminPage = () => {
       setAdmissionRequirements(requirementsRes.requirements || []);
       setEnrollmentSteps(stepsRes.steps || []);
       setAdmissionNotes(notesRes.notes || []);
+      setInstitutionalInfo(institutionalInfoRes.institutional_info || null);
       
       showAlert('info', 'Data Loaded', 'All data has been loaded successfully.');
     } catch (err) {
@@ -214,10 +217,26 @@ const AdminPage = () => {
     } else if (activeTab === 'news') {
       defaultFormData.is_active = true;
       defaultFormData.display_order = 0;
+    } else if (activeTab === 'institutional-info') {
+      // Initialize with existing data if available
+      if (institutionalInfo) {
+        defaultFormData.vision = institutionalInfo.vision || '';
+        defaultFormData.mission = institutionalInfo.mission || '';
+        defaultFormData.goals = institutionalInfo.goals || '';
+        defaultFormData.core_values = institutionalInfo.core_values || '';
+        defaultFormData.is_active = institutionalInfo.is_active !== undefined ? institutionalInfo.is_active : true;
+        setEditingItem(institutionalInfo);
+      } else {
+        defaultFormData.vision = '';
+        defaultFormData.mission = '';
+        defaultFormData.goals = '';
+        defaultFormData.core_values = '';
+        defaultFormData.is_active = true;
+      }
     }
     setFormData(defaultFormData);
     setShowForm(true);
-    showAlert('info', 'Create Mode', `Creating new ${activeTab.replace('-', ' ')}`);
+    showAlert('info', institutionalInfo && activeTab === 'institutional-info' ? 'Edit Mode' : 'Create Mode', `${institutionalInfo && activeTab === 'institutional-info' ? 'Editing' : 'Creating'} ${activeTab.replace('-', ' ')}`);
   };
 
   const handleEdit = (item) => {
@@ -228,9 +247,17 @@ const AdminPage = () => {
     if (activeTab === 'admission-requirements' && !editData.requirement_text) {
       editData.requirement_text = item.requirement_text || '';
     }
+    if (activeTab === 'institutional-info') {
+      // Handle institutional info editing
+      editData.vision = item.vision || '';
+      editData.mission = item.mission || '';
+      editData.goals = item.goals || '';
+      editData.core_values = item.core_values || '';
+      editData.is_active = item.is_active !== undefined ? item.is_active : true;
+    }
     setFormData(editData);
     setShowForm(true);
-    showAlert('info', 'Edit Mode', `Editing ${activeTab.replace('-', ' ')}: ${item.title || item.name || item.full_name || item.requirement_text || 'Item'}`);
+    showAlert('info', 'Edit Mode', `Editing ${activeTab.replace('-', ' ')}: ${item.title || item.name || item.full_name || item.requirement_text || 'Institutional Information'}`);
   };
 
   const handleDelete = async (item, type) => {
@@ -285,6 +312,10 @@ const AdminPage = () => {
           await apiService.deleteAdmissionNote(item.id);
           setAdmissionNotes(prev => prev.filter(n => n.id !== item.id));
           break;
+        case 'institutional-info':
+          // Institutional info cannot be deleted, only edited
+          showAlert('warning', 'Cannot Delete', 'Institutional information cannot be deleted. You can only edit it.');
+          return;
         default:
           throw new Error(`Unknown type: ${type}`);
       }
@@ -488,6 +519,18 @@ const AdminPage = () => {
             result = await apiService.createAdmissionNote(noteData);
             setAdmissionNotes(prev => [...prev, result.note]);
           }
+          break;
+        case 'institutional-info':
+          const institutionalData = {
+            vision: formData.vision || '',
+            mission: formData.mission || '',
+            goals: formData.goals || '',
+            core_values: formData.core_values || '',
+            is_active: !!formData.is_active
+          };
+          
+          result = await apiService.updateInstitutionalInfo(institutionalData);
+          setInstitutionalInfo(result.institutional_info);
           break;
         case 'news':
           // Prepare FormData for file upload
@@ -870,7 +913,8 @@ const AdminPage = () => {
       { key: 'personnel', label: 'Personnel', icon: 'fas fa-users' },
       { key: 'admission-requirements', label: 'Admission Requirements', icon: 'fas fa-file-alt' },
       { key: 'enrollment-steps', label: 'Enrollment Steps', icon: 'fas fa-list-ol' },
-      { key: 'admission-notes', label: 'Admission Notes', icon: 'fas fa-sticky-note' }
+      { key: 'admission-notes', label: 'Admission Notes', icon: 'fas fa-sticky-note' },
+      { key: 'institutional-info', label: 'Institutional Info', icon: 'fas fa-university' }
     ];
 
     return (
@@ -1872,9 +1916,151 @@ const AdminPage = () => {
             </div>
           </>
         );
+      case 'institutional-info':
+        return (
+          <>
+            <div className="form-group">
+              <label>Vision *</label>
+              <textarea
+                name="vision"
+                value={formData.vision || ''}
+                onChange={handleInputChange}
+                required
+                rows="4"
+                placeholder="Enter institution vision statement"
+              />
+            </div>
+            <div className="form-group">
+              <label>Mission *</label>
+              <textarea
+                name="mission"
+                value={formData.mission || ''}
+                onChange={handleInputChange}
+                required
+                rows="4"
+                placeholder="Enter institution mission statement"
+              />
+            </div>
+            <div className="form-group">
+              <label>Goals *</label>
+              <textarea
+                name="goals"
+                value={formData.goals || ''}
+                onChange={handleInputChange}
+                required
+                rows="8"
+                placeholder="Enter institution goals, one per line. Each line will be displayed as a separate goal item."
+                style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}
+              />
+              <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                Enter each goal on a new line. Each line will be displayed as a separate goal item with a checkmark icon.
+              </small>
+            </div>
+            <div className="form-group">
+              <label>Core Values *</label>
+              <textarea
+                name="core_values"
+                value={formData.core_values || ''}
+                onChange={handleInputChange}
+                required
+                rows="6"
+                placeholder="Enter core values description. You can use HTML formatting or plain text."
+              />
+              <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                Enter core values description. You can format it as HTML (e.g., &lt;p&gt;...&lt;/p&gt;) or plain text with line breaks.
+              </small>
+            </div>
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  checked={formData.is_active || false}
+                  onChange={handleInputChange}
+                />
+                Active
+              </label>
+            </div>
+          </>
+        );
       default:
         return null;
     }
+  };
+
+  const renderInstitutionalInfoForm = () => {
+    return (
+      <div className="data-table-container">
+        <div className="table-header">
+          <h3>Institutional Information</h3>
+          <button className="btn btn-primary" onClick={() => handleCreate()}>
+            <span className="btn-icon"><i className="fas fa-edit"></i></span>
+            {institutionalInfo ? 'Edit' : 'Create'}
+          </button>
+        </div>
+
+        {institutionalInfo ? (
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Content</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Vision</strong></td>
+                  <td>{institutionalInfo.vision || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td><strong>Mission</strong></td>
+                  <td>{institutionalInfo.mission || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td><strong>Goals</strong></td>
+                  <td>
+                    {institutionalInfo.goals ? (
+                      <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                        {institutionalInfo.goals.split('\n').filter(goal => goal.trim()).map((goal, index) => (
+                          <li key={index}>{goal.trim()}</li>
+                        ))}
+                      </ul>
+                    ) : 'N/A'}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Core Values</strong></td>
+                  <td>
+                    {institutionalInfo.core_values ? (
+                      <div dangerouslySetInnerHTML={{ __html: institutionalInfo.core_values.replace(/\n/g, '<br/>') }} />
+                    ) : 'N/A'}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Status</strong></td>
+                  <td>{institutionalInfo.is_active ? 'Active' : 'Inactive'}</td>
+                </tr>
+                <tr>
+                  <td><strong>Last Updated</strong></td>
+                  <td>{institutionalInfo.updated_at ? new Date(institutionalInfo.updated_at).toLocaleString() : 'N/A'}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style={{ marginTop: '20px', textAlign: 'right' }}>
+              <button className="btn btn-secondary" onClick={() => handleEdit(institutionalInfo)}>
+                <span className="btn-icon"><i className="fas fa-edit"></i></span>
+                Edit
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>No institutional information found. Click "Create" to add institutional information.</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Removed welcome message component
@@ -2007,6 +2193,7 @@ const AdminPage = () => {
             {activeTab === 'admission-requirements' && renderDataTable(admissionRequirements, 'admission-requirements')}
             {activeTab === 'enrollment-steps' && renderDataTable(enrollmentSteps, 'enrollment-steps')}
             {activeTab === 'admission-notes' && renderDataTable(admissionNotes, 'admission-notes')}
+            {activeTab === 'institutional-info' && renderInstitutionalInfoForm()}
           </div>
         </div>
 

@@ -90,4 +90,11 @@ urlpatterns = [
     path('api/admin/news/create/', views.api_create_news, name='api_create_news'),
     path('api/admin/news/<int:news_id>/', views.api_update_news, name='api_update_news'),
     path('api/admin/news/<int:news_id>/delete/', views.api_delete_news, name='api_delete_news'),
+    
+    # Public API endpoint for Institutional Info
+    path('api/institutional-info/', views.api_institutional_info, name='api_institutional_info'),
+    
+    # Admin-only endpoints for Institutional Info
+    path('api/admin/institutional-info/', views.api_admin_institutional_info, name='api_admin_institutional_info'),
+    path('api/admin/institutional-info/update/', views.api_update_institutional_info, name='api_update_institutional_info'),
 ] 

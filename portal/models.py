@@ -389,3 +389,32 @@ class News(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.date})"
+
+
+class InstitutionalInfo(models.Model):
+    """Model for institutional information: Mission, Vision, Goals, and Core Values"""
+    
+    # Mission, Vision, Goals
+    vision = models.TextField(help_text="Institution vision statement")
+    mission = models.TextField(help_text="Institution mission statement")
+    goals = models.TextField(help_text="Institution goals (one per line)")
+    core_values = models.TextField(help_text="Core values description")
+    
+    # Metadata
+    is_active = models.BooleanField(default=True, help_text="Whether this information is currently active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Institutional Information'
+        verbose_name_plural = 'Institutional Information'
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return "Institutional Information"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one active record exists
+        if self.is_active:
+            InstitutionalInfo.objects.exclude(pk=self.pk).filter(is_active=True).update(is_active=False)
+        super().save(*args, **kwargs)

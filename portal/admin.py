@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo
 
 # Register your models here.
 admin.site.register(AcademicProgram)
@@ -152,3 +152,39 @@ class NewsAdmin(admin.ModelAdmin):
         return 'Yes' if obj.image else 'No'
     has_image.short_description = 'Has Image'
     has_image.boolean = False
+
+@admin.register(InstitutionalInfo)
+class InstitutionalInfoAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'is_active', 'updated_at')
+    list_filter = ('is_active',)
+    fieldsets = (
+        ('Vision', {
+            'fields': ('vision',)
+        }),
+        ('Mission', {
+            'fields': ('mission',)
+        }),
+        ('Goals', {
+            'fields': ('goals',),
+            'description': 'Enter goals one per line. Each line will be displayed as a separate goal item.'
+        }),
+        ('Core Values', {
+            'fields': ('core_values',),
+            'description': 'Enter core values description. You can use HTML formatting or plain text.'
+        }),
+        ('Display Settings', {
+            'fields': ('is_active',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        # Only allow one active record
+        if InstitutionalInfo.objects.filter(is_active=True).exists():
+            return not InstitutionalInfo.objects.exists()
+        return True
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion of the only record
+        if InstitutionalInfo.objects.count() <= 1:
+            return False
+        return True

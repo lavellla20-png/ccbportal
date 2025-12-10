@@ -446,6 +446,24 @@ class ApiService {
             method: 'DELETE',
         });
     }
+
+    // Get institutional information (public)
+    async getInstitutionalInfo() {
+        return this.makeRequest('/institutional-info/');
+    }
+
+    // Admin: Get institutional information
+    async getAdminInstitutionalInfo() {
+        return this.makeRequest('/admin/institutional-info/');
+    }
+
+    // Admin: Update institutional information
+    async updateInstitutionalInfo(payload) {
+        return this.makeRequest('/admin/institutional-info/update/', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+    }
 }
 
 // Create and export a singleton instance
