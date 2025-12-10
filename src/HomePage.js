@@ -15,6 +15,11 @@ const HomePage = () => {
   const [isFeaturesGridVisible, setIsFeaturesGridVisible] = useState(false);
   const [isCtaButtonsVisible, setIsCtaButtonsVisible] = useState(false);
 
+  // Carousel state for news section
+  const [currentNewsPage, setCurrentNewsPage] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [slideDirection, setSlideDirection] = useState('right'); // 'left' or 'right'
+
   // Initialize audio on component mount
   useEffect(() => {
     // Reset and initialize the global audio manager for fresh playback
@@ -44,6 +49,27 @@ const HomePage = () => {
   const [newsError, setNewsError] = useState("");
   const [newsLoading, setNewsLoading] = useState(true);
 
+  // Reset carousel to first page when news data changes
+  useEffect(() => {
+    setCurrentNewsPage(0);
+  }, [newsData.length]);
+
+  // Auto-play carousel
+  useEffect(() => {
+    const itemsPerPage = 3;
+    const totalPages = Math.ceil(newsData.length / itemsPerPage);
+    const showCarousel = newsData.length > itemsPerPage;
+    
+    if (!showCarousel || isCarouselPaused) return;
+
+    const interval = setInterval(() => {
+      setSlideDirection('left'); // Auto-advance slides left
+      setCurrentNewsPage((prev) => (prev + 1) % totalPages);
+    }, 5000); // Change page every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [newsData.length, isCarouselPaused]);
+
 
   // Load announcements, events, achievements, and news for carousel
   useEffect(() => {
@@ -69,6 +95,7 @@ const HomePage = () => {
                   (a.details && a.details.trim().length > 0
                     ? a.details
                     : a.body) || "",
+                image: a.image || null,
                 link: "/news",
               }))
             : [];
@@ -88,6 +115,7 @@ const HomePage = () => {
                   (e.details && e.details.trim().length > 0
                     ? e.details
                     : e.description) || "",
+                image: e.image || null,
                 link: "/news",
               }))
             : [];
@@ -107,6 +135,7 @@ const HomePage = () => {
                   (c.details && c.details.trim().length > 0
                     ? c.details
                     : c.description) || "",
+                image: c.image || null,
                 link: "/news",
               }))
             : [];
@@ -137,9 +166,9 @@ const HomePage = () => {
           (x, y) => new Date(y.date) - new Date(x.date)
         );
         
-        // Separate items with images (news items with images) from text-only items
-        const itemsWithImages = allItems.filter(item => item.image && item.type === "news");
-        const textOnlyItems = allItems.filter(item => !item.image || item.type !== "news");
+        // Separate items with images from text-only items (all types can have images)
+        const itemsWithImages = allItems.filter(item => item.image && item.image.trim().length > 0);
+        const textOnlyItems = allItems.filter(item => !item.image || item.image.trim().length === 0);
         
         // Sort both groups by date
         itemsWithImages.sort((x, y) => new Date(y.date) - new Date(x.date));
@@ -295,6 +324,48 @@ const HomePage = () => {
     } catch {
       return iso;
     }
+  };
+
+  // Carousel navigation handlers
+  const itemsPerPage = 3;
+  const totalPages = Math.ceil(newsData.length / itemsPerPage);
+  const showCarousel = newsData.length > itemsPerPage;
+  
+  const getCurrentPageItems = () => {
+    const startIndex = currentNewsPage * itemsPerPage;
+    const pageItems = newsData.slice(startIndex, startIndex + itemsPerPage);
+    
+    // Always return exactly 3 items - pad with empty items if needed
+    const paddedItems = [...pageItems];
+    while (paddedItems.length < itemsPerPage) {
+      paddedItems.push(null); // Add null placeholder to maintain 3 cards
+    }
+    return paddedItems.slice(0, itemsPerPage); // Ensure exactly 3 items
+  };
+
+  const handleNextPage = () => {
+    setIsCarouselPaused(true);
+    setSlideDirection('left'); // Cards move left when going to next page
+    setCurrentNewsPage((prev) => (prev + 1) % totalPages);
+    // Resume auto-play after 8 seconds of user interaction
+    setTimeout(() => setIsCarouselPaused(false), 8000);
+  };
+
+  const handlePrevPage = () => {
+    setIsCarouselPaused(true);
+    setSlideDirection('right'); // Cards move right when going to previous page
+    setCurrentNewsPage((prev) => (prev - 1 + totalPages) % totalPages);
+    // Resume auto-play after 8 seconds of user interaction
+    setTimeout(() => setIsCarouselPaused(false), 8000);
+  };
+
+  const goToPage = (pageIndex) => {
+    setIsCarouselPaused(true);
+    // Determine direction based on current page
+    setSlideDirection(pageIndex > currentNewsPage ? 'left' : 'right');
+    setCurrentNewsPage(pageIndex);
+    // Resume auto-play after 8 seconds of user interaction
+    setTimeout(() => setIsCarouselPaused(false), 8000);
   };
 
   return (
@@ -975,52 +1046,102 @@ const HomePage = () => {
                 </div>
               </div>
             ) : (
-              <div className="news-grid-layout">
-                {newsData.slice(0, 6).map((news, index) => {
-                  // Pattern matching the image layout:
-                  // Row 1: TEXT BOX (0), IMAGE NEWS (1), TEXT BOX (2)
-                  // Row 2: IMAGE NEWS (3), TEXT BOX (4), IMAGE NEWS (5)
-                  // Image slots are at indices 1, 3, 5 - always show as image cards
-                  const imageSlots = [1, 3, 5];
-                  const isImageSlot = imageSlots.includes(index);
-                  // Always show as image card if it's an image slot position
-                  const isImageNews = isImageSlot;
-                  
-                  return (
-                    <div
-                      key={news.id}
-                      className={`news-grid-item ${
-                        isImageNews ? "news-image-item" : "news-text-item"
-                      }`}
-                    >
-                      {isImageNews ? (
-                        <div className="news-card-image">
-                          <div className="news-image-wrapper">
-                            {news.image ? (
-                              <img 
-                                src={news.image} 
-                                alt={news.title}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover'
-                                }}
-                              />
-                            ) : (
-                              <div className="news-image-placeholder">
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width="48"
-                                  height="48"
-                                  fill="currentColor"
-                                  opacity="0.3"
-                                >
-                                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                </svg>
+              <div 
+                className="news-carousel-wrapper"
+                onMouseEnter={() => setIsCarouselPaused(true)}
+                onMouseLeave={() => setIsCarouselPaused(false)}
+              >
+                <div className="news-carousel-slide-container">
+                  <div 
+                    className={`news-grid-layout slide-${slideDirection}`}
+                    key={`news-page-${currentNewsPage}`}
+                  >
+                  {(showCarousel ? getCurrentPageItems() : (() => {
+                    // If not using carousel, pad to 3 items if needed
+                    const items = [...newsData];
+                    while (items.length < 3) {
+                      items.push(null);
+                    }
+                    return items.slice(0, 3);
+                  })()).map((news, index) => {
+                    // Skip rendering if item is null (placeholder)
+                    if (!news) {
+                      return (
+                        <div
+                          key={`placeholder-${index}`}
+                          className="news-grid-item news-placeholder"
+                          aria-hidden="true"
+                        />
+                      );
+                    }
+                    
+                    // Only render as image card if item actually has an image
+                    // This ensures uniformity - all cards without images will be text cards
+                    const hasImage = news.image && news.image.trim().length > 0;
+                    const isImageNews = hasImage;
+                    
+                    return (
+                      <div
+                        key={news.id}
+                        className={`news-grid-item ${
+                          isImageNews ? "news-image-item" : "news-text-item"
+                        }`}
+                      >
+                        {isImageNews ? (
+                          <div className="news-card-image">
+                            <div className="news-image-wrapper">
+                              {news.image ? (
+                                <img 
+                                  src={news.image} 
+                                  alt={news.title}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                />
+                              ) : (
+                                <div className="news-image-placeholder">
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    width="48"
+                                    height="48"
+                                    fill="currentColor"
+                                    opacity="0.3"
+                                  >
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <div className="news-card-content">
+                              <div
+                                className={`news-type-badge ${
+                                  news.type === "announcement"
+                                    ? "type-announcement"
+                                    : news.type === "event"
+                                    ? "type-event"
+                                    : news.type === "news"
+                                    ? "type-news"
+                                    : "type-achievement"
+                                }`}
+                              >
+                                {news.badge}
                               </div>
-                            )}
+                              <div className="news-date">
+                                {formatMonthYear(news.date)}
+                              </div>
+                              <h3 className="news-title">{news.title}</h3>
+                              <p className="news-summary">
+                                {truncate(news.description, 120)}
+                              </p>
+                              <a href={news.link} className="news-link">
+                                Read More →
+                              </a>
+                            </div>
                           </div>
-                          <div className="news-card-content">
+                        ) : (
+                          <div className="news-card">
                             <div
                               className={`news-type-badge ${
                                 news.type === "announcement"
@@ -1039,43 +1160,62 @@ const HomePage = () => {
                             </div>
                             <h3 className="news-title">{news.title}</h3>
                             <p className="news-summary">
-                              {truncate(news.description, 120)}
+                              {truncate(news.description, 200)}
                             </p>
                             <a href={news.link} className="news-link">
                               Read More →
                             </a>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="news-card">
-                          <div
-                            className={`news-type-badge ${
-                              news.type === "announcement"
-                                ? "type-announcement"
-                                : news.type === "event"
-                                ? "type-event"
-                                : news.type === "news"
-                                ? "type-news"
-                                : "type-achievement"
-                            }`}
-                          >
-                            {news.badge}
-                          </div>
-                          <div className="news-date">
-                            {formatMonthYear(news.date)}
-                          </div>
-                          <h3 className="news-title">{news.title}</h3>
-                          <p className="news-summary">
-                            {truncate(news.description, 200)}
-                          </p>
-                          <a href={news.link} className="news-link">
-                            Read More →
-                          </a>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                    );
+                  })}
+                  </div>
+                </div>
+                {showCarousel && (
+                  <div className="news-carousel-controls">
+                    <button
+                      className="news-carousel-btn news-carousel-btn-prev"
+                      onClick={handlePrevPage}
+                      aria-label="Previous page"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
+                        fill="currentColor"
+                      >
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                      </svg>
+                    </button>
+                    <div className="news-carousel-dots">
+                      {Array.from({ length: totalPages }).map((_, index) => (
+                        <button
+                          key={index}
+                          className={`news-carousel-dot ${
+                            currentNewsPage === index ? "active" : ""
+                          }`}
+                          onClick={() => goToPage(index)}
+                          aria-label={`Go to page ${index + 1}`}
+                        />
+                      ))}
                     </div>
-                  );
-                })}
+                    <button
+                      className="news-carousel-btn news-carousel-btn-next"
+                      onClick={handleNextPage}
+                      aria-label="Next page"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
+                        fill="currentColor"
+                      >
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
