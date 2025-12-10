@@ -362,84 +362,113 @@ const AdminPage = () => {
             setAcademicPrograms(prev => [...prev, result.program]);
           }
           break;
-        case 'events':
-          // Prepare FormData to support image upload
-          const eventFormData = new FormData();
-          eventFormData.append('title', formData.title || '');
-          eventFormData.append('description', formData.description || '');
-          eventFormData.append('details', formData.details || '');
-          eventFormData.append('event_date', formData.event_date || '');
-          eventFormData.append('start_time', formData.start_time || '');
-          eventFormData.append('end_time', formData.end_time || '');
-          eventFormData.append('location', formData.location || '');
-          eventFormData.append('is_active', formData.is_active ? 'true' : 'false');
-          eventFormData.append('display_order', formData.display_order || 0);
-          if (formData.image && formData.image instanceof File) {
-            eventFormData.append('image', formData.image);
+        case 'events': {
+          const hasFile = (formData.image && formData.image instanceof File) || formData.remove_image;
+          let payload;
+          if (hasFile) {
+            const fd = new FormData();
+            fd.append('title', formData.title || '');
+            fd.append('description', formData.description || '');
+            fd.append('details', formData.details || '');
+            fd.append('event_date', formData.event_date || '');
+            fd.append('start_time', formData.start_time || '');
+            fd.append('end_time', formData.end_time || '');
+            fd.append('location', formData.location || '');
+            fd.append('is_active', formData.is_active ? 'true' : 'false');
+            fd.append('display_order', formData.display_order || 0);
+            if (formData.image && formData.image instanceof File) fd.append('image', formData.image);
+            if (formData.remove_image) fd.append('remove_image', 'true');
+            payload = fd;
+          } else {
+            payload = {
+              title: formData.title || '',
+              description: formData.description || '',
+              details: formData.details || '',
+              event_date: formData.event_date || '',
+              start_time: formData.start_time || '',
+              end_time: formData.end_time || '',
+              location: formData.location || '',
+              is_active: !!formData.is_active,
+              display_order: Number(formData.display_order) || 0,
+            };
           }
-          if (formData.remove_image) {
-            eventFormData.append('remove_image', 'true');
-          }
-          
           if (isEditing) {
-            result = await apiService.updateEvent(editingItem.id, eventFormData);
+            result = await apiService.updateEvent(editingItem.id, payload);
             setEvents(prev => prev.map(e => e.id === editingItem.id ? result.event : e));
           } else {
-            result = await apiService.createEvent(eventFormData);
+            result = await apiService.createEvent(payload);
             setEvents(prev => [...prev, result.event]);
           }
           break;
-        case 'achievements':
-          // Prepare FormData to support image upload
-          const achievementFormData = new FormData();
-          achievementFormData.append('title', formData.title || '');
-          achievementFormData.append('description', formData.description || '');
-          achievementFormData.append('details', formData.details || '');
-          achievementFormData.append('achievement_date', formData.achievement_date || '');
-          achievementFormData.append('category', formData.category || '');
-          achievementFormData.append('is_active', formData.is_active ? 'true' : 'false');
-          achievementFormData.append('display_order', formData.display_order || 0);
-          if (formData.image && formData.image instanceof File) {
-            achievementFormData.append('image', formData.image);
+        }
+        case 'achievements': {
+          const hasFile = (formData.image && formData.image instanceof File) || formData.remove_image;
+          let payload;
+          if (hasFile) {
+            const fd = new FormData();
+            fd.append('title', formData.title || '');
+            fd.append('description', formData.description || '');
+            fd.append('details', formData.details || '');
+            fd.append('achievement_date', formData.achievement_date || '');
+            fd.append('category', formData.category || '');
+            fd.append('is_active', formData.is_active ? 'true' : 'false');
+            fd.append('display_order', formData.display_order || 0);
+            if (formData.image && formData.image instanceof File) fd.append('image', formData.image);
+            if (formData.remove_image) fd.append('remove_image', 'true');
+            payload = fd;
+          } else {
+            payload = {
+              title: formData.title || '',
+              description: formData.description || '',
+              details: formData.details || '',
+              achievement_date: formData.achievement_date || '',
+              category: formData.category || '',
+              is_active: !!formData.is_active,
+              display_order: Number(formData.display_order) || 0,
+            };
           }
-          if (formData.remove_image) {
-            achievementFormData.append('remove_image', 'true');
-          }
-          
           if (isEditing) {
-            result = await apiService.updateAchievement(editingItem.id, achievementFormData);
+            result = await apiService.updateAchievement(editingItem.id, payload);
             setAchievements(prev => prev.map(a => a.id === editingItem.id ? result.achievement : a));
           } else {
-            result = await apiService.createAchievement(achievementFormData);
+            result = await apiService.createAchievement(payload);
             setAchievements(prev => [...prev, result.achievement]);
           }
           break;
-        case 'announcements':
-          // Prepare FormData to support image upload
-          const announcementFormData = new FormData();
-          announcementFormData.append('title', formData.title || '');
-          announcementFormData.append('date', formData.date || '');
-          announcementFormData.append('body', formData.body || '');
-          announcementFormData.append('details', formData.details || '');
-          announcementFormData.append('is_active', formData.is_active ? 'true' : 'false');
-          announcementFormData.append('display_order', formData.display_order || 0);
-          if (formData.image && formData.image instanceof File) {
-            announcementFormData.append('image', formData.image);
+        }
+        case 'announcements': {
+          const hasFile = (formData.image && formData.image instanceof File) || formData.remove_image;
+          let payload;
+          if (hasFile) {
+            const fd = new FormData();
+            fd.append('title', formData.title || '');
+            fd.append('date', formData.date || '');
+            fd.append('body', formData.body || '');
+            fd.append('details', formData.details || '');
+            fd.append('is_active', formData.is_active ? 'true' : 'false');
+            fd.append('display_order', formData.display_order || 0);
+            if (formData.image && formData.image instanceof File) fd.append('image', formData.image);
+            if (formData.remove_image) fd.append('remove_image', 'true');
+            payload = fd;
+          } else {
+            payload = {
+              title: formData.title || '',
+              date: formData.date || '',
+              body: formData.body || '',
+              details: formData.details || '',
+              is_active: !!formData.is_active,
+              display_order: Number(formData.display_order) || 0,
+            };
           }
-          if (formData.remove_image) {
-            announcementFormData.append('remove_image', 'true');
-          }
-          
-          console.log('Creating/updating announcement with data:', announcementFormData);
           if (isEditing) {
-            result = await apiService.updateAnnouncement(editingItem.id, announcementFormData);
+            result = await apiService.updateAnnouncement(editingItem.id, payload);
             setAnnouncements(prev => prev.map(a => a.id === editingItem.id ? result.announcement : a));
           } else {
-            result = await apiService.createAnnouncement(announcementFormData);
+            result = await apiService.createAnnouncement(payload);
             setAnnouncements(prev => [...prev, result.announcement]);
           }
-          console.log('Announcement operation result:', result);
           break;
+        }
         // removed 'admissions-dates' case
         case 'departments': {
           // Prepare payload with sensible defaults and coercions
