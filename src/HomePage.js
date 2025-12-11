@@ -97,7 +97,7 @@ const HomePage = () => {
                     ? a.details
                     : a.body) || "",
                 image: a.image || null,
-                link: `/news?announcementId=${a.id}`,
+                link: `/news?section=announcements&announcementId=${a.id}`,
               }))
             : [];
         const anns = annsAll
@@ -117,7 +117,7 @@ const HomePage = () => {
                     ? e.details
                     : e.description) || "",
                 image: e.image || null,
-                link: `/news?eventId=${e.id}`,
+                link: `/news?section=events&eventId=${e.id}`,
               }))
             : [];
         const evts = evtsAll
@@ -137,7 +137,7 @@ const HomePage = () => {
                     ? c.details
                     : c.description) || "",
                 image: c.image || null,
-                link: `/news?achievementId=${c.id}`,
+                link: `/news?section=achievements&achievementId=${c.id}`,
               }))
             : [];
         const achs = achsAll
@@ -158,7 +158,7 @@ const HomePage = () => {
                     ? n.details
                     : n.body) || "",
                 image: n.image || null,
-                link: `/news?newsId=${n.id}`,
+                link: `/news?section=news&newsId=${n.id}`,
               }))
             : [];
         

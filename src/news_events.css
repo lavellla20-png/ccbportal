@@ -5,6 +5,12 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Prevent background scroll when a modal is open */
+body.modal-open,
+html.modal-open {
+  overflow: hidden !important;
+}
+
 /* Hero Section */
 .news-hero {
   background-image: url('../public/images/ccb.jpg');

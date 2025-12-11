@@ -307,12 +307,92 @@ const NewsEvents = () => {
     }
   };
 
+  // Smoothly scroll to a section on this page
+  const scrollToSection = (sectionKey) => {
+    const selectors = {
+      events: '.events-section',
+      news: '.news-section-content',
+      announcements: '.announcements-section',
+      achievements: '.achievements-section'
+    };
+    const selector = selectors[sectionKey];
+    if (!selector) return null;
+    const el = document.querySelector(selector);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+      // Apply an offset for navbar
+      const yOffset = -80;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+    return el;
+  };
+
+  const MODAL_OPEN_DELAY_MS = 400; // slight delay before opening modal after section becomes visible
+
+  // Scroll to section, then open a specific modal once the section is in view (with fallback)
+  const openAfterScroll = (sectionKey, openFn, clearKeys = []) => {
+    const selectors = {
+      events: '.events-section',
+      news: '.news-section-content',
+      announcements: '.announcements-section',
+      achievements: '.achievements-section'
+    };
+    const targetSelector = selectors[sectionKey];
+    const targetEl = targetSelector ? document.querySelector(targetSelector) : null;
+
+    let opened = false;
+    let openTimeout = null;
+    const doOpen = () => {
+      if (openFn) openFn();
+      clearKeys.forEach((key) => clearUrlParams(key));
+      setDeepLinkHandled(true);
+    };
+    const scheduleOpen = () => {
+      if (opened) return;
+      opened = true;
+      openTimeout = setTimeout(doOpen, MODAL_OPEN_DELAY_MS);
+    };
+
+    // If selector missing, just open immediately
+    if (!targetEl) {
+      scheduleOpen();
+      return;
+    }
+
+    scrollToSection(sectionKey);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !opened) {
+            scheduleOpen();
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0, rootMargin: '0px 0px -10% 0px' }
+    );
+    observer.observe(targetEl);
+
+    const fallback = setTimeout(() => {
+      scheduleOpen();
+    }, 1500);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(fallback);
+      if (openTimeout) clearTimeout(openTimeout);
+    };
+  };
+
   // Open modal via deep-link query params
   // Supported:
   //   ?newsId=123
   //   ?eventId=123
   //   ?announcementId=123
   //   ?achievementId=123
+  //   ?section=events|news|announcements|achievements (scroll & open first item)
   useEffect(() => {
     if (deepLinkHandled) return;
     const params = new URLSearchParams(window.location.search);
@@ -320,44 +400,114 @@ const NewsEvents = () => {
     const eventId = params.get('eventId');
     const announcementId = params.get('announcementId');
     const achievementId = params.get('achievementId');
+    const sectionTarget = params.get('section');
 
     if (eventId && events.length > 0) {
       const item = events.find((e) => String(e.id) === eventId || `e-${e.id}` === eventId);
       if (item) {
-        openEventModal(item);
-        clearUrlParams('eventId'); // Clear URL param immediately after opening
-        setDeepLinkHandled(true);
-        return;
+        openAfterScroll(sectionTarget || 'events', () => openEventModal(item), ['eventId', 'section']);
+        return () => {};
       }
     }
 
     if (announcementId && announcements.length > 0) {
       const item = announcements.find((a) => String(a.id) === announcementId || `a-${a.id}` === announcementId);
       if (item) {
-        openModal(item);
-        clearUrlParams('announcementId'); // Clear URL param immediately after opening
-        setDeepLinkHandled(true);
-        return;
+        openAfterScroll(sectionTarget || 'announcements', () => openModal(item), ['announcementId', 'section']);
+        return () => {};
       }
     }
 
     if (achievementId && achievements.length > 0) {
       const item = achievements.find((ach) => String(ach.id) === achievementId || `c-${ach.id}` === achievementId || `ach-${ach.id}` === achievementId);
       if (item) {
-        openAchievementModal(item);
-        clearUrlParams('achievementId'); // Clear URL param immediately after opening
-        setDeepLinkHandled(true);
-        return;
+        openAfterScroll(sectionTarget || 'achievements', () => openAchievementModal(item), ['achievementId', 'section']);
+        return () => {};
       }
     }
 
     if (newsId && news.length > 0) {
       const item = news.find((n) => String(n.id) === newsId || `n-${n.id}` === newsId);
       if (item) {
-        openNewsModal(item);
-        clearUrlParams('newsId'); // Clear URL param immediately after opening
+        openAfterScroll(sectionTarget || 'news', () => openNewsModal(item), ['newsId', 'section']);
+        return () => {};
+      }
+    }
+
+    // If only a section target is provided, scroll there and open the first item when in view
+    if (sectionTarget) {
+      const selectors = {
+        events: '.events-section',
+        news: '.news-section-content',
+        announcements: '.announcements-section',
+        achievements: '.achievements-section'
+      };
+      const targetSelector = selectors[sectionTarget];
+      const targetEl = targetSelector ? document.querySelector(targetSelector) : null;
+
+      const openFirstItem = () => {
+        if (sectionTarget === 'events' && events.length > 0) {
+          openEventModal(events[0]);
+        } else if (sectionTarget === 'news' && news.length > 0) {
+          openNewsModal(news[0]);
+        } else if (sectionTarget === 'announcements' && announcements.length > 0) {
+          openModal(announcements[0]);
+        } else if (sectionTarget === 'achievements' && achievements.length > 0) {
+          openAchievementModal(achievements[0]);
+        }
+        clearUrlParams('section');
         setDeepLinkHandled(true);
+      };
+
+      // If no items yet, bail
+      if (
+        (sectionTarget === 'events' && events.length === 0) ||
+        (sectionTarget === 'news' && news.length === 0) ||
+        (sectionTarget === 'announcements' && announcements.length === 0) ||
+        (sectionTarget === 'achievements' && achievements.length === 0)
+      ) {
         return;
+      }
+
+      const el = scrollToSection(sectionTarget);
+
+      if (targetEl) {
+        let opened = false;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting && !opened) {
+                opened = true;
+                openFirstItem();
+                observer.disconnect();
+              }
+            });
+          },
+          { threshold: 0, rootMargin: '0px 0px -10% 0px' }
+        );
+        observer.observe(targetEl);
+
+        // Fallback: open after 1.5s if observer doesn't fire (e.g., scroll disabled)
+        const fallback = setTimeout(() => {
+          if (!opened) {
+            opened = true;
+            openFirstItem();
+          }
+        }, 1500);
+
+        return () => {
+          observer.disconnect();
+          clearTimeout(fallback);
+        };
+      } else if (el) {
+        // If we scrolled but no observer, still schedule fallback open
+        const fallback = setTimeout(() => {
+          openFirstItem();
+        }, 1200);
+        return () => clearTimeout(fallback);
+      } else {
+        // If selector not found, just mark handled
+        setDeepLinkHandled(true);
       }
     }
   }, [events, announcements, achievements, news, deepLinkHandled]);
@@ -464,9 +614,15 @@ const NewsEvents = () => {
     setAchievementsDisplayCount(prev => prev + itemsPerPage);
   };
 
-  // Improve modal UX: close on Escape, lock background scroll
+  // Improve modal UX: close on Escape, lock background scroll (page cannot scroll under modal)
   useEffect(() => {
-    if (!isModalOpen && !isEventModalOpen && !isAchievementModalOpen && !isNewsModalOpen && !isDateDetailModalOpen) return;
+    const anyModalOpen = isModalOpen || isEventModalOpen || isAchievementModalOpen || isNewsModalOpen || isDateDetailModalOpen;
+    if (!anyModalOpen) {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+      return;
+    }
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         if (isModalOpen) closeModal();
@@ -476,12 +632,22 @@ const NewsEvents = () => {
         if (isDateDetailModalOpen) closeDateDetailModal();
       }
     };
-    const previousOverflow = document.body.style.overflow;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
     document.addEventListener('keydown', handleKeyDown);
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousOverflow;
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
     };
   }, [isModalOpen, isEventModalOpen, isAchievementModalOpen, isNewsModalOpen, isDateDetailModalOpen]);
 
