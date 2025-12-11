@@ -379,6 +379,7 @@ def api_announcements(request):
                 'date': a.date.isoformat(),
                 'body': a.body,
                 'details': a.details,
+                'image': request.build_absolute_uri(a.image.url) if a.image else None,
             }
             for a in items
         ]
@@ -394,25 +395,48 @@ def api_announcements(request):
 def api_create_announcement(request):
     """Create a new announcement (Admin only)"""
     try:
-        data = json.loads(request.body)
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            title = request.POST.get('title')
+            date = request.POST.get('date')
+            body = request.POST.get('body')
+            details = request.POST.get('details', '')
+            is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            display_order = int(request.POST.get('display_order', 0))
+            image = request.FILES.get('image')
+        else:
+            # Handle JSON (for backward compatibility, though image won't work)
+            data = json.loads(request.body)
+            title = data.get('title')
+            date = data.get('date')
+            body = data.get('body')
+            details = data.get('details', '')
+            is_active = data.get('is_active', True)
+            display_order = data.get('display_order', 0)
+            image = None
 
         # Validate required fields
-        required_fields = ['title', 'date', 'body']
-        for field in required_fields:
-            if not data.get(field):
+        required_fields = {'title': title, 'date': date, 'body': body}
+        for field, value in required_fields.items():
+            if not value:
                 return JsonResponse({
                     'status': 'error',
                     'message': f'Field "{field}" is required'
                 }, status=400)
 
         announcement = Announcement.objects.create(
-            title=data['title'],
-            date=_parse_date(data['date']),
-            body=data['body'],
-            details=data.get('details', ''),
-            is_active=data.get('is_active', True),
-            display_order=data.get('display_order', 0)
+            title=title,
+            date=_parse_date(date),
+            body=body,
+            details=details,
+            is_active=is_active,
+            display_order=display_order
         )
+        
+        # Handle image upload
+        if image:
+            announcement.image = image
+            announcement.save()
 
         return JsonResponse({
             'status': 'success',
@@ -420,7 +444,8 @@ def api_create_announcement(request):
             'announcement': {
                 'id': announcement.id,
                 'title': announcement.title,
-                'date': announcement.date.isoformat()
+                'date': announcement.date.isoformat(),
+                'image': announcement.image.url if announcement.image else None
             }
         }, status=201)
     
@@ -444,18 +469,46 @@ def api_update_announcement(request, announcement_id):
     """Update an announcement (Admin only)"""
     try:
         announcement = get_object_or_404(Announcement, id=announcement_id)
-        data = json.loads(request.body)
+        
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            if 'title' in request.POST:
+                announcement.title = request.POST.get('title')
+            if 'date' in request.POST:
+                announcement.date = _parse_date(request.POST.get('date'))
+            if 'body' in request.POST:
+                announcement.body = request.POST.get('body')
+            if 'details' in request.POST:
+                announcement.details = request.POST.get('details', '')
+            if 'is_active' in request.POST:
+                announcement.is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            if 'display_order' in request.POST:
+                announcement.display_order = int(request.POST.get('display_order', 0))
+            
+            # Handle image upload
+            image = request.FILES.get('image')
+            remove_image = request.POST.get('remove_image', 'false').lower() == 'true'
+            
+            if remove_image:
+                if announcement.image:
+                    announcement.image.delete(save=False)
+                announcement.image = None
+            elif image:
+                announcement.image = image
+        else:
+            # Handle JSON
+            data = json.loads(request.body)
+            
+            fields_to_update = [
+                'title', 'date', 'body', 'details', 'is_active', 'display_order'
+            ]
 
-        fields_to_update = [
-            'title', 'date', 'body', 'details', 'is_active', 'display_order'
-        ]
-
-        for field in fields_to_update:
-            if field in data:
-                if field == 'date':
-                    setattr(announcement, field, _parse_date(data[field]))
-                else:
-                    setattr(announcement, field, data[field])
+            for field in fields_to_update:
+                if field in data:
+                    if field == 'date':
+                        setattr(announcement, field, _parse_date(data[field]))
+                    else:
+                        setattr(announcement, field, data[field])
 
         announcement.save()
 
@@ -465,7 +518,8 @@ def api_update_announcement(request, announcement_id):
             'announcement': {
                 'id': announcement.id,
                 'title': announcement.title,
-                'date': announcement.date.isoformat()
+                'date': announcement.date.isoformat(),
+                'image': announcement.image.url if announcement.image else None
             }
         })
     
@@ -549,8 +603,9 @@ def api_achievements(request):
     """Return active achievements"""
     try:
         items = Achievement.objects.filter(is_active=True).order_by('display_order', '-achievement_date')
-        data = [
-            {
+        data = []
+        for a in items:
+            achievement_data = {
                 'id': a.id,
                 'title': a.title,
                 'description': a.description,
@@ -560,8 +615,11 @@ def api_achievements(request):
                 'category': a.category,
                 'display_order': a.display_order,
             }
-            for a in items
-        ]
+            if a.image:
+                achievement_data['image'] = request.build_absolute_uri(a.image.url)
+            else:
+                achievement_data['image'] = None
+            data.append(achievement_data)
         return JsonResponse({'status': 'success', 'achievements': data, 'count': len(data)})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Error fetching achievements: {str(e)}'}, status=500)
@@ -1519,6 +1577,10 @@ def api_admin_achievements(request):
                 'created_at': achievement.created_at.isoformat(),
                 'updated_at': achievement.updated_at.isoformat()
             }
+            if achievement.image:
+                achievement_data['image'] = request.build_absolute_uri(achievement.image.url)
+            else:
+                achievement_data['image'] = None
             achievements_data.append(achievement_data)
         
         return JsonResponse({
@@ -1547,6 +1609,7 @@ def api_admin_announcements(request):
                 'date': announcement.date.isoformat(),
                 'body': announcement.body,
                 'details': announcement.details,
+                'image': request.build_absolute_uri(announcement.image.url) if announcement.image else None,
                 'is_active': announcement.is_active,
                 'display_order': announcement.display_order,
                 'created_at': announcement.created_at.isoformat(),
@@ -1938,12 +2001,32 @@ def api_delete_event(request, event_id):
 def api_create_achievement(request):
     """Create a new achievement (Admin only)"""
     try:
-        data = json.loads(request.body)
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            details = request.POST.get('details', '')
+            achievement_date = request.POST.get('achievement_date')
+            category = request.POST.get('category', 'Achievement')
+            is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            display_order = int(request.POST.get('display_order', 0))
+            image = request.FILES.get('image')
+        else:
+            # Handle JSON (for backward compatibility, though image won't work)
+            data = json.loads(request.body)
+            title = data.get('title')
+            description = data.get('description')
+            details = data.get('details', '')
+            achievement_date = data.get('achievement_date')
+            category = data.get('category', 'Achievement')
+            is_active = data.get('is_active', True)
+            display_order = data.get('display_order', 0)
+            image = None
         
         # Validate required fields
-        required_fields = ['title', 'description', 'achievement_date']
-        for field in required_fields:
-            if not data.get(field):
+        required_fields = {'title': title, 'description': description, 'achievement_date': achievement_date}
+        for field, value in required_fields.items():
+            if not value:
                 return JsonResponse({
                     'status': 'error',
                     'message': f'Field "{field}" is required'
@@ -1951,23 +2034,41 @@ def api_create_achievement(request):
         
         # Create the achievement
         achievement = Achievement.objects.create(
-            title=data['title'],
-            description=data['description'],
-            details=data.get('details', ''),
-            achievement_date=_parse_date(data['achievement_date']),
-            category=data.get('category', 'Achievement'),
-            is_active=data.get('is_active', True),
-            display_order=data.get('display_order', 0)
+            title=title,
+            description=description,
+            details=details,
+            achievement_date=_parse_date(achievement_date),
+            category=category,
+            is_active=is_active,
+            display_order=display_order
         )
+        
+        # Handle image upload if provided
+        if image:
+            achievement.image = image
+            achievement.save()
+        
+        achievement_data = {
+            'id': achievement.id,
+            'title': achievement.title,
+            'description': achievement.description,
+            'details': achievement.details,
+            'achievement_date': achievement.achievement_date.isoformat(),
+            'category': achievement.category,
+            'is_active': achievement.is_active,
+            'display_order': achievement.display_order,
+            'created_at': achievement.created_at.isoformat(),
+            'updated_at': achievement.updated_at.isoformat()
+        }
+        if achievement.image:
+            achievement_data['image'] = request.build_absolute_uri(achievement.image.url)
+        else:
+            achievement_data['image'] = None
         
         return JsonResponse({
             'status': 'success',
             'message': 'Achievement created successfully',
-            'achievement': {
-                'id': achievement.id,
-                'title': achievement.title,
-                'achievement_date': achievement.achievement_date.isoformat()
-            }
+            'achievement': achievement_data
         }, status=201)
     
     except json.JSONDecodeError:
@@ -1990,31 +2091,74 @@ def api_update_achievement(request, achievement_id):
     """Update an achievement (Admin only)"""
     try:
         achievement = get_object_or_404(Achievement, id=achievement_id)
-        data = json.loads(request.body)
         
-        # Update fields
-        fields_to_update = [
-            'title', 'description', 'details', 'achievement_date', 
-            'category', 'is_active', 'display_order'
-        ]
-        
-        for field in fields_to_update:
-            if field in data:
-                if field == 'achievement_date':
-                    setattr(achievement, field, _parse_date(data[field]))
-                else:
-                    setattr(achievement, field, data[field])
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            if 'title' in request.POST:
+                achievement.title = request.POST.get('title')
+            if 'description' in request.POST:
+                achievement.description = request.POST.get('description')
+            if 'details' in request.POST:
+                achievement.details = request.POST.get('details', '')
+            if 'achievement_date' in request.POST:
+                achievement.achievement_date = _parse_date(request.POST.get('achievement_date'))
+            if 'category' in request.POST:
+                achievement.category = request.POST.get('category', 'Achievement')
+            if 'is_active' in request.POST:
+                achievement.is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            if 'display_order' in request.POST:
+                achievement.display_order = int(request.POST.get('display_order', 0))
+            
+            # Handle image upload
+            image = request.FILES.get('image')
+            remove_image = request.POST.get('remove_image', 'false').lower() == 'true'
+            
+            if remove_image:
+                if achievement.image:
+                    achievement.image.delete(save=False)
+                achievement.image = None
+            elif image:
+                achievement.image = image
+        else:
+            # Handle JSON (for backward compatibility, though image won't work)
+            data = json.loads(request.body)
+            
+            # Update fields
+            fields_to_update = [
+                'title', 'description', 'details', 'achievement_date', 
+                'category', 'is_active', 'display_order'
+            ]
+            
+            for field in fields_to_update:
+                if field in data:
+                    if field == 'achievement_date':
+                        setattr(achievement, field, _parse_date(data[field]))
+                    else:
+                        setattr(achievement, field, data[field])
         
         achievement.save()
+        
+        achievement_data = {
+            'id': achievement.id,
+            'title': achievement.title,
+            'description': achievement.description,
+            'details': achievement.details,
+            'achievement_date': achievement.achievement_date.isoformat(),
+            'category': achievement.category,
+            'is_active': achievement.is_active,
+            'display_order': achievement.display_order,
+            'created_at': achievement.created_at.isoformat(),
+            'updated_at': achievement.updated_at.isoformat()
+        }
+        if achievement.image:
+            achievement_data['image'] = request.build_absolute_uri(achievement.image.url)
+        else:
+            achievement_data['image'] = None
         
         return JsonResponse({
             'status': 'success',
             'message': 'Achievement updated successfully',
-            'achievement': {
-                'id': achievement.id,
-                'title': achievement.title,
-                'achievement_date': achievement.achievement_date.isoformat()
-            }
+            'achievement': achievement_data
         })
     
     except json.JSONDecodeError:

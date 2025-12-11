@@ -806,7 +806,7 @@ const AdminPage = () => {
       case 'achievements':
         return ['Title', 'Date', 'Category', 'Status'];
       case 'announcements':
-        return ['Title', 'Date', 'Status'];
+        return ['Title', 'Date', 'Image', 'Status'];
       case 'news':
         return ['Title', 'Date', 'Image', 'Status'];
       // removed 'admissions-dates'
@@ -855,6 +855,7 @@ const AdminPage = () => {
         return [
           item.title || 'N/A',
           item.date || 'N/A',
+          item.image ? 'Yes' : 'No',
           item.is_active ? 'Active' : 'Inactive'
         ];
       case 'news':

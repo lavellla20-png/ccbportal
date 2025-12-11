@@ -876,11 +876,17 @@ const NewsEvents = () => {
                       <div className={`announcements-grid ${isAnnouncementsVisible ? 'fade-in-visible' : ''}`}>
                         {announcements.slice(0, announcementsDisplayCount).map(item => (
                           <div key={item.id} className="announcement-item">
-                            <div className="announcement-icon">
-                              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                              </svg>
-                            </div>
+                            {item.image ? (
+                              <div className="announcement-image-wrapper">
+                                <img src={item.image} alt={item.title} />
+                              </div>
+                            ) : (
+                              <div className="announcement-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                              </div>
+                            )}
                             <div className="announcement-content">
                               <h4>{item.title}</h4>
                               <p className="announcement-date">{formatDate(item.date)}</p>
@@ -912,12 +918,18 @@ const NewsEvents = () => {
                     <>
                       <div className={`achievements-grid ${isAchievementsVisible ? 'fade-in-visible' : ''}`}>
                         {achievements.slice(0, achievementsDisplayCount).map(achievement => (
-                          <div key={achievement.id} className="achievement-item">
-                            <div className="achievement-icon">
-                              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                              </svg>
-                            </div>
+                          <div key={achievement.id} className={`achievement-item ${achievement.image ? 'has-image' : ''}`}>
+                            {achievement.image ? (
+                              <div className="achievement-image-wrapper">
+                                <img src={achievement.image} alt={achievement.title} />
+                              </div>
+                            ) : (
+                              <div className="achievement-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                              </div>
+                            )}
                             <div className="achievement-content">
                               <h4>{achievement.title}</h4>
                               <p className="achievement-date">{achievement.formatted_date}</p>
