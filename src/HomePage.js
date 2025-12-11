@@ -932,6 +932,7 @@ const HomePage = () => {
         {/* Snow Stacking Effect Overlay */}
         <div className="snow-stacking-section" aria-hidden="true">
           <div className="snow-stacking-overlay"></div>
+          <div className="snow-fog-layer"></div>
           <div className="snow-stacking-layer-1"></div>
           <div className="snow-stacking-layer-2"></div>
           <div className="snow-stacking-layer-3"></div>
