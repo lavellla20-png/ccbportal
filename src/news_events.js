@@ -44,11 +44,11 @@ const NewsEvents = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   
   // Pagination state for each section
-  const [eventsDisplayCount, setEventsDisplayCount] = useState(8);
-  const [newsDisplayCount, setNewsDisplayCount] = useState(8);
-  const [announcementsDisplayCount, setAnnouncementsDisplayCount] = useState(8);
-  const [achievementsDisplayCount, setAchievementsDisplayCount] = useState(8);
-  const itemsPerPage = 8;
+  const [eventsDisplayCount, setEventsDisplayCount] = useState(6);
+  const [newsDisplayCount, setNewsDisplayCount] = useState(6);
+  const [announcementsDisplayCount, setAnnouncementsDisplayCount] = useState(6);
+  const [achievementsDisplayCount, setAchievementsDisplayCount] = useState(6);
+  const itemsPerPage = 6;
 
   // Scroll-based navbar visibility
   useEffect(() => {
@@ -614,6 +614,11 @@ const NewsEvents = () => {
     setAchievementsDisplayCount(prev => prev + itemsPerPage);
   };
 
+  const resetEvents = () => setEventsDisplayCount(itemsPerPage);
+  const resetNews = () => setNewsDisplayCount(itemsPerPage);
+  const resetAnnouncements = () => setAnnouncementsDisplayCount(itemsPerPage);
+  const resetAchievements = () => setAchievementsDisplayCount(itemsPerPage);
+
   // Improve modal UX: close on Escape, lock background scroll (page cannot scroll under modal)
   useEffect(() => {
     const anyModalOpen = isModalOpen || isEventModalOpen || isAchievementModalOpen || isNewsModalOpen || isDateDetailModalOpen;
@@ -1000,11 +1005,18 @@ const NewsEvents = () => {
                           </div>
                         ))}
                       </div>
-                      {events.length > eventsDisplayCount && (
+                      {(events.length > eventsDisplayCount || eventsDisplayCount > itemsPerPage) && (
                         <div className="pagination-controls">
-                          <button className="load-more-btn" onClick={loadMoreEvents}>
-                            Load More Events ({events.length - eventsDisplayCount} remaining)
-                          </button>
+                          {events.length > eventsDisplayCount && (
+                            <button className="load-more-btn" onClick={loadMoreEvents}>
+                              Load More Events
+                            </button>
+                          )}
+                          {eventsDisplayCount > itemsPerPage && (
+                            <button className="load-more-btn secondary" onClick={resetEvents}>
+                              Minimize
+                            </button>
+                          )}
                         </div>
                       )}
                     </>
@@ -1044,11 +1056,18 @@ const NewsEvents = () => {
                           </div>
                         ))}
                       </div>
-                      {news.length > newsDisplayCount && (
+                      {(news.length > newsDisplayCount || newsDisplayCount > itemsPerPage) && (
                         <div className="pagination-controls">
-                          <button className="load-more-btn" onClick={loadMoreNews}>
-                            Load More News ({news.length - newsDisplayCount} remaining)
-                          </button>
+                          {news.length > newsDisplayCount && (
+                            <button className="load-more-btn" onClick={loadMoreNews}>
+                              Load More News
+                            </button>
+                          )}
+                          {newsDisplayCount > itemsPerPage && (
+                            <button className="load-more-btn secondary" onClick={resetNews}>
+                              Minimize
+                            </button>
+                          )}
                         </div>
                       )}
                     </>
@@ -1087,11 +1106,18 @@ const NewsEvents = () => {
                           </div>
                         ))}
                       </div>
-                      {announcements.length > announcementsDisplayCount && (
+                      {(announcements.length > announcementsDisplayCount || announcementsDisplayCount > itemsPerPage) && (
                         <div className="pagination-controls">
-                          <button className="load-more-btn" onClick={loadMoreAnnouncements}>
-                            Load More Announcements ({announcements.length - announcementsDisplayCount} remaining)
-                          </button>
+                          {announcements.length > announcementsDisplayCount && (
+                            <button className="load-more-btn" onClick={loadMoreAnnouncements}>
+                              Load More Announcements
+                            </button>
+                          )}
+                          {announcementsDisplayCount > itemsPerPage && (
+                            <button className="load-more-btn secondary" onClick={resetAnnouncements}>
+                              Minimize
+                            </button>
+                          )}
                         </div>
                       )}
                     </>
@@ -1131,11 +1157,18 @@ const NewsEvents = () => {
                           </div>
                         ))}
                       </div>
-                      {achievements.length > achievementsDisplayCount && (
+                      {(achievements.length > achievementsDisplayCount || achievementsDisplayCount > itemsPerPage) && (
                         <div className="pagination-controls">
-                          <button className="load-more-btn" onClick={loadMoreAchievements}>
-                            Load More Achievements ({achievements.length - achievementsDisplayCount} remaining)
-                          </button>
+                          {achievements.length > achievementsDisplayCount && (
+                            <button className="load-more-btn" onClick={loadMoreAchievements}>
+                              Load More Achievements
+                            </button>
+                          )}
+                          {achievementsDisplayCount > itemsPerPage && (
+                            <button className="load-more-btn secondary" onClick={resetAchievements}>
+                              Minimize
+                            </button>
+                          )}
                         </div>
                       )}
                     </>

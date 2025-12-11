@@ -1573,14 +1573,34 @@ html.modal-open {
 }
 
 .load-more-btn:hover {
-  background: linear-gradient(135deg, #3a6b3a, #2d5a2d);
+  background: #ff8c00;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(45, 90, 45, 0.3);
+  box-shadow: 0 6px 20px rgba(255, 140, 0, 0.3);
 }
 
 .load-more-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 10px rgba(45, 90, 45, 0.2);
+}
+
+.load-more-btn.secondary {
+  background: #fff;
+  color: #2d5a2d;
+  border: 1.5px solid #2d5a2d;
+  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.12);
+}
+
+.load-more-btn.secondary:hover {
+  background: #ff8c00;
+  color: #fff;
+  border-color: #ff8c00;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 140, 0, 0.2);
+}
+
+.load-more-btn.secondary:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(45, 90, 45, 0.16);
 }
 
 /* News Section */
@@ -1667,6 +1687,7 @@ html.modal-open {
 }
 
 .news-item-content h4 {
+  margin-top: -8px;
   color: #2d5a2d;
   font-size: 1.2rem;
   font-weight: bold;
