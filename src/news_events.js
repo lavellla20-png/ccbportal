@@ -295,6 +295,18 @@ const NewsEvents = () => {
     loadNews();
   }, []);
 
+  // Helper function to clear URL parameters
+  const clearUrlParams = (paramName) => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has(paramName)) {
+      params.delete(paramName);
+      const newUrl = params.toString() 
+        ? `${window.location.pathname}?${params.toString()}` 
+        : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  };
+
   // Open modal via deep-link query params
   // Supported:
   //   ?newsId=123
@@ -313,6 +325,7 @@ const NewsEvents = () => {
       const item = events.find((e) => String(e.id) === eventId || `e-${e.id}` === eventId);
       if (item) {
         openEventModal(item);
+        clearUrlParams('eventId'); // Clear URL param immediately after opening
         setDeepLinkHandled(true);
         return;
       }
@@ -322,6 +335,7 @@ const NewsEvents = () => {
       const item = announcements.find((a) => String(a.id) === announcementId || `a-${a.id}` === announcementId);
       if (item) {
         openModal(item);
+        clearUrlParams('announcementId'); // Clear URL param immediately after opening
         setDeepLinkHandled(true);
         return;
       }
@@ -331,6 +345,7 @@ const NewsEvents = () => {
       const item = achievements.find((ach) => String(ach.id) === achievementId || `c-${ach.id}` === achievementId || `ach-${ach.id}` === achievementId);
       if (item) {
         openAchievementModal(item);
+        clearUrlParams('achievementId'); // Clear URL param immediately after opening
         setDeepLinkHandled(true);
         return;
       }
@@ -340,6 +355,7 @@ const NewsEvents = () => {
       const item = news.find((n) => String(n.id) === newsId || `n-${n.id}` === newsId);
       if (item) {
         openNewsModal(item);
+        clearUrlParams('newsId'); // Clear URL param immediately after opening
         setDeepLinkHandled(true);
         return;
       }
@@ -374,6 +390,8 @@ const NewsEvents = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAnnouncement(null);
+    // Clear URL parameters when modal is closed (in case they somehow still exist)
+    clearUrlParams('announcementId');
   };
 
   const openEventModal = (item) => {
@@ -384,6 +402,8 @@ const NewsEvents = () => {
   const closeEventModal = () => {
     setIsEventModalOpen(false);
     setSelectedEvent(null);
+    // Clear URL parameters when modal is closed (in case they somehow still exist)
+    clearUrlParams('eventId');
   };
 
   const openAchievementModal = (item) => {
@@ -394,6 +414,8 @@ const NewsEvents = () => {
   const closeAchievementModal = () => {
     setIsAchievementModalOpen(false);
     setSelectedAchievement(null);
+    // Clear URL parameters when modal is closed (in case they somehow still exist)
+    clearUrlParams('achievementId');
   };
 
   const openNewsModal = (item) => {
@@ -404,6 +426,8 @@ const NewsEvents = () => {
   const closeNewsModal = () => {
     setIsNewsModalOpen(false);
     setSelectedNews(null);
+    // Clear URL parameters when modal is closed (in case they somehow still exist)
+    clearUrlParams('newsId');
   };
 
   const openDateDetailModal = (date, events, announcements, news, achievements) => {
