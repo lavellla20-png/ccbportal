@@ -256,6 +256,60 @@ const AdminPage = () => {
       editData.core_values = item.core_values || '';
       editData.is_active = item.is_active !== undefined ? item.is_active : true;
     }
+    // Format date fields for HTML date inputs (YYYY-MM-DD format)
+    if (activeTab === 'news') {
+      // Ensure all fields are properly initialized
+      editData.title = item.title || '';
+      editData.body = item.body || '';
+      editData.details = item.details || '';
+      editData.is_active = item.is_active !== undefined ? item.is_active : true;
+      editData.display_order = item.display_order || 0;
+      
+      // Format date for HTML date input
+      if (editData.date) {
+        try {
+          const dateObj = new Date(editData.date);
+          if (!isNaN(dateObj.getTime())) {
+            editData.date = dateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          }
+        } catch (e) {
+          console.warn('Failed to format date for news:', e);
+          editData.date = '';
+        }
+      } else {
+        editData.date = '';
+      }
+    }
+    if (activeTab === 'events' && editData.event_date) {
+      try {
+        const dateObj = new Date(editData.event_date);
+        if (!isNaN(dateObj.getTime())) {
+          editData.event_date = dateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        }
+      } catch (e) {
+        console.warn('Failed to format date for event:', e);
+      }
+    }
+    if (activeTab === 'achievements' && editData.achievement_date) {
+      try {
+        const dateObj = new Date(editData.achievement_date);
+        if (!isNaN(dateObj.getTime())) {
+          editData.achievement_date = dateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        }
+      } catch (e) {
+        console.warn('Failed to format date for achievement:', e);
+      }
+    }
+    if (activeTab === 'announcements' && editData.date) {
+      try {
+        const dateObj = new Date(editData.date);
+        if (!isNaN(dateObj.getTime())) {
+          editData.date = dateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        }
+      } catch (e) {
+        console.warn('Failed to format date for announcement:', e);
+      }
+    }
     setFormData(editData);
     setShowForm(true);
     showAlert('info', 'Edit Mode', `Editing ${activeTab.replace('-', ' ')}: ${item.title || item.name || item.full_name || item.requirement_text || 'Institutional Information'}`);
@@ -581,12 +635,18 @@ const AdminPage = () => {
         case 'news':
           // Prepare FormData for file upload
           const newsFormData = new FormData();
-          newsFormData.append('title', formData.title || '');
-          newsFormData.append('date', formData.date || '');
-          newsFormData.append('body', formData.body || '');
+          
+          // Ensure all required fields are present
+          if (!formData.title || !formData.date || !formData.body) {
+            throw new Error('Title, date, and body are required fields');
+          }
+          
+          newsFormData.append('title', formData.title.trim());
+          newsFormData.append('date', formData.date);
+          newsFormData.append('body', formData.body.trim());
           newsFormData.append('details', formData.details || '');
           newsFormData.append('is_active', formData.is_active ? 'true' : 'false');
-          newsFormData.append('display_order', formData.display_order || 0);
+          newsFormData.append('display_order', String(formData.display_order || 0));
           
           // Handle image upload
           if (formData.image && formData.image instanceof File) {

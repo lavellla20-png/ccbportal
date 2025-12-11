@@ -3309,7 +3309,7 @@ def api_create_news(request):
         }, status=500)
 
 
-@require_http_methods(["PUT", "PATCH"])
+@require_http_methods(["PUT", "PATCH", "POST"])
 @csrf_exempt
 @login_required
 @permission_required('portal.change_news', raise_exception=True)
@@ -3319,51 +3319,65 @@ def api_update_news(request, news_id):
         news = get_object_or_404(News, id=news_id)
         
         # Handle multipart/form-data for file upload
+        # Check if this is a POST request with method override (for multipart data)
+        # or a regular PUT/PATCH request
+        is_post_with_override = (request.method == 'POST' and 
+                                (request.META.get('HTTP_X_HTTP_METHOD_OVERRIDE') == 'PUT' or 
+                                 request.POST.get('_method') == 'PUT'))
+        
         if request.content_type and 'multipart/form-data' in request.content_type:
-            title = request.POST.get('title')
-            date = request.POST.get('date')
-            body = request.POST.get('body')
-            details = request.POST.get('details', '')
-            is_active = request.POST.get('is_active', 'true').lower() == 'true'
-            display_order = int(request.POST.get('display_order', 0))
-            image = request.FILES.get('image')
+            # For multipart data, use POST (Django parses this correctly)
+            if 'title' in request.POST:
+                news.title = request.POST.get('title')
+            if 'date' in request.POST:
+                news.date = _parse_date(request.POST.get('date'))
+            if 'body' in request.POST:
+                news.body = request.POST.get('body')
+            if 'details' in request.POST:
+                news.details = request.POST.get('details', '')
+            if 'is_active' in request.POST:
+                news.is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            if 'display_order' in request.POST:
+                news.display_order = int(request.POST.get('display_order', 0))
+            
+            image = request.FILES.get('image') if hasattr(request, 'FILES') else None
             remove_image = request.POST.get('remove_image', 'false').lower() == 'true'
+            
+            # Handle image
+            if remove_image:
+                if news.image:
+                    news.image.delete()
+                news.image = None
+            elif image:
+                # Delete old image if exists
+                if news.image:
+                    news.image.delete()
+                news.image = image
         else:
             # Handle JSON
             data = json.loads(request.body)
-            title = data.get('title')
-            date = data.get('date')
-            body = data.get('body')
-            details = data.get('details', '')
-            is_active = data.get('is_active')
-            display_order = data.get('display_order')
+            
+            # Update fields
+            if 'title' in data:
+                news.title = data.get('title')
+            if 'date' in data:
+                news.date = _parse_date(data.get('date'))
+            if 'body' in data:
+                news.body = data.get('body')
+            if 'details' in data:
+                news.details = data.get('details', '')
+            if 'is_active' in data:
+                news.is_active = data.get('is_active')
+            if 'display_order' in data:
+                news.display_order = data.get('display_order')
+            
             image = None
             remove_image = data.get('remove_image', False)
-        
-        # Update fields
-        if title is not None:
-            news.title = title
-        if date is not None:
-            news.date = _parse_date(date)
-        if body is not None:
-            news.body = body
-        if details is not None:
-            news.details = details
-        if is_active is not None:
-            news.is_active = is_active
-        if display_order is not None:
-            news.display_order = display_order
-        
-        # Handle image
-        if remove_image:
-            if news.image:
-                news.image.delete()
-            news.image = None
-        elif image:
-            # Delete old image if exists
-            if news.image:
-                news.image.delete()
-            news.image = image
+            
+            if remove_image:
+                if news.image:
+                    news.image.delete()
+                news.image = None
         
         news.save()
         

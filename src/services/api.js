@@ -414,11 +414,22 @@ class ApiService {
 
     async updateNews(newsId, formData) {
         // Use FormData for file uploads
+        // Note: Django doesn't parse multipart/form-data for PUT requests automatically
+        // So we use POST with a method override header
         const url = `${this.baseURL}/admin/news/${newsId}/`;
+        
+        // Add _method field to FormData to indicate it's an update
+        if (formData instanceof FormData) {
+            formData.append('_method', 'PUT');
+        }
+        
         const config = {
-            method: 'PUT',
+            method: 'POST', // Use POST for multipart data (Django handles this correctly)
             body: formData,
             credentials: 'include',
+            headers: {
+                'X-HTTP-Method-Override': 'PUT' // Send method override header
+            }
             // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
         };
 
