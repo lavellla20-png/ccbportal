@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
 import apiService from './services/api';
+import { normalizeImageUrl } from './utils/imageUtils';
 import './news_events.css';
 
 const NewsEvents = () => {
@@ -783,7 +784,7 @@ const NewsEvents = () => {
                           <div key={event.id} className="event-item">
                             {event.image ? (
                               <div className="event-image-wrapper">
-                                <img src={event.image} alt={event.title} />
+                                <img src={normalizeImageUrl(event.image)} alt={event.title} />
                                 <div className="event-date-overlay">
                                   <div className="event-date">
                                     <span className="day">{formatEventDate(event.event_date).day}</span>
@@ -834,7 +835,7 @@ const NewsEvents = () => {
                           <div key={item.id} className="news-item">
                             {item.image && (
                               <div className="news-image-wrapper">
-                                <img src={item.image} alt={item.title} />
+                                <img src={normalizeImageUrl(item.image)} alt={item.title} />
                               </div>
                             )}
                             <div className="news-item-content">
@@ -878,7 +879,7 @@ const NewsEvents = () => {
                           <div key={item.id} className="announcement-item">
                             {item.image ? (
                               <div className="announcement-image-wrapper">
-                                <img src={item.image} alt={item.title} />
+                                <img src={normalizeImageUrl(item.image)} alt={item.title} />
                               </div>
                             ) : (
                               <div className="announcement-icon">
@@ -921,7 +922,7 @@ const NewsEvents = () => {
                           <div key={achievement.id} className={`achievement-item ${achievement.image ? 'has-image' : ''}`}>
                             {achievement.image ? (
                               <div className="achievement-image-wrapper">
-                                <img src={achievement.image} alt={achievement.title} />
+                                <img src={normalizeImageUrl(achievement.image)} alt={achievement.title} />
                               </div>
                             ) : (
                               <div className="achievement-icon">
@@ -970,7 +971,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeModal}>×</button>
             {selectedAnnouncement.image && (
               <div className="modal-image-wrapper">
-                <img src={selectedAnnouncement.image} alt={selectedAnnouncement.title} />
+                <img src={normalizeImageUrl(selectedAnnouncement.image)} alt={selectedAnnouncement.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedAnnouncement.title}</h3>
@@ -993,7 +994,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeEventModal}>×</button>
             {selectedEvent.image && (
               <div className="modal-image-wrapper">
-                <img src={selectedEvent.image} alt={selectedEvent.title} />
+                <img src={normalizeImageUrl(selectedEvent.image)} alt={selectedEvent.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedEvent.title}</h3>
@@ -1021,7 +1022,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeAchievementModal}>×</button>
             {selectedAchievement.image && (
               <div className="modal-image-wrapper">
-                <img src={selectedAchievement.image} alt={selectedAchievement.title} />
+                <img src={normalizeImageUrl(selectedAchievement.image)} alt={selectedAchievement.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedAchievement.title}</h3>
@@ -1045,7 +1046,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeNewsModal}>×</button>
             {selectedNews.image && (
               <div className="modal-image-wrapper">
-                <img src={selectedNews.image} alt={selectedNews.title} />
+                <img src={normalizeImageUrl(selectedNews.image)} alt={selectedNews.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedNews.title}</h3>

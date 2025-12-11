@@ -5,6 +5,7 @@ import Footer from "./components/footer";
 import ScrollToTop from "./components/ScrollToTop";
 import apiService from "./services/api";
 import audioManager from "./services/audioManager";
+import { normalizeImageUrl } from "./utils/imageUtils";
 
 const HomePage = () => {
   // State for responsive behavior
@@ -1092,7 +1093,7 @@ const HomePage = () => {
                             <div className="news-image-wrapper">
                               {news.image ? (
                                 <img 
-                                  src={news.image} 
+                                  src={normalizeImageUrl(news.image)} 
                                   alt={news.title}
                                   style={{
                                     width: '100%',

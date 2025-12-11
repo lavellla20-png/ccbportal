@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './admin.css';
 import apiService from '../services/api';
 import AdminLogin from './login';
+import { normalizeImageUrl } from '../utils/imageUtils';
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -1160,7 +1161,7 @@ const AdminPage = () => {
                 <div style={{ marginTop: '10px' }}>
                   <p style={{ color: '#666', fontSize: '0.9rem' }}>Current image:</p>
                   <img 
-                    src={editingItem.image} 
+                    src={normalizeImageUrl(editingItem.image)} 
                     alt="Current" 
                     style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
                   />
@@ -1239,7 +1240,7 @@ const AdminPage = () => {
                 <div style={{ marginTop: '10px' }}>
                   <p style={{ color: '#666', fontSize: '0.9rem' }}>Current image:</p>
                   <img 
-                    src={editingItem.image} 
+                    src={normalizeImageUrl(editingItem.image)} 
                     alt="Current" 
                     style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
                   />
@@ -1337,7 +1338,7 @@ const AdminPage = () => {
                 <div style={{ marginTop: '10px' }}>
                   <p style={{ color: '#666', fontSize: '0.9rem' }}>Current image:</p>
                   <img 
-                    src={editingItem.image} 
+                    src={normalizeImageUrl(editingItem.image)} 
                     alt="Current" 
                     style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
                   />
@@ -1464,7 +1465,7 @@ const AdminPage = () => {
                 <div style={{ marginTop: '10px' }}>
                   <p style={{ color: '#666', fontSize: '0.9rem' }}>Current image:</p>
                   <img 
-                    src={editingItem.image} 
+                    src={normalizeImageUrl(editingItem.image)} 
                     alt="Current" 
                     style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
                   />
@@ -2057,7 +2058,7 @@ const AdminPage = () => {
                 <div style={{ marginTop: '10px' }}>
                   <p style={{ color: '#666', fontSize: '0.9rem' }}>Current image:</p>
                   <img 
-                    src={editingItem.image} 
+                    src={normalizeImageUrl(editingItem.image)} 
                     alt="Current" 
                     style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px', borderRadius: '8px' }}
                   />
