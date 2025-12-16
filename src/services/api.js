@@ -1,4 +1,5 @@
 // API service for communicating with Django backend
+import { addCsrfToken, sanitizeString } from '../utils/security';
 
 const API_BASE_URL = '/api';
 
@@ -10,9 +11,14 @@ class ApiService {
     async makeRequest(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         const isFormData = options.body instanceof FormData;
-        const headers = isFormData
+        let headers = isFormData
             ? { ...(options.headers || {}) } // let browser set Content-Type for FormData
             : { 'Content-Type': 'application/json', ...(options.headers || {}) };
+
+        // Add CSRF token for POST/PUT/DELETE requests
+        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+            headers = addCsrfToken(headers);
+        }
 
         const config = {
             headers,
@@ -84,7 +90,9 @@ class ApiService {
 
     // Dynamic search across all content
     async search(query) {
-        return this.makeRequest(`/search/?q=${encodeURIComponent(query)}`);
+        // Sanitize search query to prevent XSS
+        const sanitizedQuery = sanitizeString(query, 200);
+        return this.makeRequest(`/search/?q=${encodeURIComponent(sanitizedQuery)}`);
     }
 
     // Admin: Announcements CRUD

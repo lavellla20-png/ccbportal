@@ -21,12 +21,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6epnt%znb*)x+vj1*&+r)f33dr(%i)bkdy(gc9fk@h%#+3c@3)'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-6epnt%znb*)x+vj1*&+r)f33dr(%i)bkdy(gc9fk@h%#+3c@3)')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+# Security: Only allow specific hosts in production
+if DEBUG:
+    ALLOWED_HOSTS = ['*']  # Allow all in development
+else:
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -81,14 +85,15 @@ WSGI_APPLICATION = 'ccb_portal_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ccb_portal',
-        'USER': 'root',
-        'PASSWORD': '',  # Default XAMPP MySQL has no password
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME', 'ccb_portal'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),  # Use environment variable for production
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
             'sql_mode': 'STRICT_TRANS_TABLES',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
@@ -144,47 +149,44 @@ MEDIA_ROOT = BASE_DIR / 'media'
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]
+    # Production: Only allow specific origins
+    allowed_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins]
+    CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
+# Security: Restrict CORS methods and headers
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRFToken']
 
 # WhiteNoise settings
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Email settings via Anymail (Brevo)
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-ANYMAIL = {
-    "BREVO_API_KEY": os.getenv("BREVO_API_KEY", "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"),
-    # Enable to see full request/response details in console for troubleshooting
-    "DEBUG_API_REQUESTS": True if os.getenv("ANYMAIL_DEBUG", "1") == "1" else False,
-}
+# SECURITY: All API keys and passwords must come from environment variables
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+if BREVO_API_KEY:
+    EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+    ANYMAIL = {
+        "BREVO_API_KEY": BREVO_API_KEY,
+        # Disable debug in production
+        "DEBUG_API_REQUESTS": DEBUG and os.getenv("ANYMAIL_DEBUG", "0") == "1",
+    }
+else:
+    # Fallback SMTP (optional) if Anymail not configured
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
+    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+    EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
+    EMAIL_HOST_USER = EMAIL_HOST_USER or os.getenv("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD or os.getenv("EMAIL_HOST_PASSWORD", "")
+
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "citycollegeofbayawan@gmail.com")
 SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
-
-# Fallback SMTP (optional) if Anymail not configured
-if not ANYMAIL["BREVO_API_KEY"]:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp-relay.brevo.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "97ce33001@smtp-brevo.com")
-    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "FYNyxD3zspGUw7Wh")
-
-# Anymail / Brevo (Sendinblue) optional configuration
-try:
-    import anymail  # noqa: F401
-    if os.getenv('BREVO_API_KEY'):
-        EMAIL_BACKEND = 'anymail.backends.brevo.EmailBackend'
-        ANYMAIL = {
-            'BREVO_API_KEY': os.getenv('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'),
-        }
-        DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL if 'DEFAULT_FROM_EMAIL' in globals() else 'no-reply@example.com')
-except Exception:
-    pass
 
 
 # Default primary key field type
@@ -195,3 +197,35 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Login URL configuration
 LOGIN_URL = '/admin/'  # Redirect to Django admin login
 LOGIN_REDIRECT_URL = '/admin/'  # After login, redirect here
+
+# Security Settings
+# Prevent clickjacking attacks
+X_FRAME_OPTIONS = 'DENY'
+
+# XSS Protection
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# HTTPS Settings (enable in production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Session Security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
+
+# Password Security
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]

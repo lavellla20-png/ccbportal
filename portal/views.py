@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, permission_required
@@ -19,6 +19,10 @@ from functools import wraps
 import datetime
 from email.mime.image import MIMEImage
 from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo
+from .security import (
+    sanitize_string, validate_email_address, sanitize_text_field,
+    validate_phone, rate_limit, validate_json_input, prevent_sql_injection
+)
 import os
 
 
@@ -389,7 +393,7 @@ def api_announcements(request):
 
 
 @require_http_methods(["POST"])
-@csrf_exempt
+@csrf_exempt  # Keep exempt for API, but add input sanitization
 @login_required
 @permission_required('portal.add_announcement', raise_exception=True)
 def api_create_announcement(request):
@@ -397,22 +401,28 @@ def api_create_announcement(request):
     try:
         # Handle multipart/form-data for file upload
         if request.content_type and 'multipart/form-data' in request.content_type:
-            title = request.POST.get('title')
+            title = sanitize_string(request.POST.get('title', ''), max_length=500)
             date = request.POST.get('date')
-            body = request.POST.get('body')
-            details = request.POST.get('details', '')
+            body = sanitize_text_field(request.POST.get('body', ''), max_length=10000)
+            details = sanitize_text_field(request.POST.get('details', ''), max_length=5000)
             is_active = request.POST.get('is_active', 'true').lower() == 'true'
-            display_order = int(request.POST.get('display_order', 0))
+            try:
+                display_order = int(request.POST.get('display_order', 0))
+            except (ValueError, TypeError):
+                display_order = 0
             image = request.FILES.get('image')
         else:
             # Handle JSON (for backward compatibility, though image won't work)
             data = json.loads(request.body)
-            title = data.get('title')
+            title = sanitize_string(data.get('title', ''), max_length=500)
             date = data.get('date')
-            body = data.get('body')
-            details = data.get('details', '')
+            body = sanitize_text_field(data.get('body', ''), max_length=10000)
+            details = sanitize_text_field(data.get('details', ''), max_length=5000)
             is_active = data.get('is_active', True)
-            display_order = data.get('display_order', 0)
+            try:
+                display_order = int(data.get('display_order', 0))
+            except (ValueError, TypeError):
+                display_order = 0
             image = None
 
         # Validate required fields
@@ -631,6 +641,9 @@ def api_search(request):
     try:
         query = request.GET.get('q', '').strip()
         
+        # Sanitize input to prevent XSS and SQL injection
+        query = sanitize_string(query, max_length=200)
+        
         if not query or len(query) < 2:
             return JsonResponse({
                 'status': 'success', 
@@ -639,6 +652,15 @@ def api_search(request):
                 'message': 'Query too short. Please enter at least 2 characters.'
             })
         
+        # Additional SQL injection check
+        try:
+            prevent_sql_injection(query)
+        except ValidationError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid search query'
+            }, status=400)
+        
         results = []
         
         # Search in Academic Programs
@@ -646,10 +668,10 @@ def api_search(request):
             programs = AcademicProgram.objects.filter(
                 is_active=True
             ).filter(
-                models.Q(title__icontains=query) |
-                models.Q(description__icontains=query) |
-                models.Q(program_overview__icontains=query) |
-                models.Q(short_title__icontains=query)
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(program_overview__icontains=query) |
+                Q(short_title__icontains=query)
             )[:5]
             
             for program in programs:
@@ -669,10 +691,10 @@ def api_search(request):
             events = Event.objects.filter(
                 is_active=True
             ).filter(
-                models.Q(title__icontains=query) |
-                models.Q(description__icontains=query) |
-                models.Q(details__icontains=query) |
-                models.Q(location__icontains=query)
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(details__icontains=query) |
+                Q(location__icontains=query)
             )[:5]
             
             for event in events:
@@ -692,9 +714,9 @@ def api_search(request):
             announcements = Announcement.objects.filter(
                 is_active=True
             ).filter(
-                models.Q(title__icontains=query) |
-                models.Q(body__icontains=query) |
-                models.Q(details__icontains=query)
+                Q(title__icontains=query) |
+                Q(body__icontains=query) |
+                Q(details__icontains=query)
             )[:5]
             
             for announcement in announcements:
@@ -714,10 +736,10 @@ def api_search(request):
             achievements = Achievement.objects.filter(
                 is_active=True
             ).filter(
-                models.Q(title__icontains=query) |
-                models.Q(description__icontains=query) |
-                models.Q(details__icontains=query) |
-                models.Q(category__icontains=query)
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(details__icontains=query) |
+                Q(category__icontains=query)
             )[:5]
             
             for achievement in achievements:
@@ -737,10 +759,10 @@ def api_search(request):
             departments = Department.objects.filter(
                 is_active=True
             ).filter(
-                models.Q(name__icontains=query) |
-                models.Q(description__icontains=query) |
-                models.Q(head_name__icontains=query) |
-                models.Q(office_location__icontains=query)
+                Q(name__icontains=query) |
+                Q(description__icontains=query) |
+                Q(head_name__icontains=query) |
+                Q(office_location__icontains=query)
             )[:3]
             
             for department in departments:
@@ -760,12 +782,12 @@ def api_search(request):
             personnel = Personnel.objects.filter(
                 is_active=True
             ).filter(
-                models.Q(first_name__icontains=query) |
-                models.Q(last_name__icontains=query) |
-                models.Q(middle_name__icontains=query) |
-                models.Q(title__icontains=query) |
-                models.Q(specialization__icontains=query) |
-                models.Q(bio__icontains=query)
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(middle_name__icontains=query) |
+                Q(title__icontains=query) |
+                Q(specialization__icontains=query) |
+                Q(bio__icontains=query)
             )[:3]
             
             for person in personnel:
@@ -1307,25 +1329,42 @@ def api_search(request):
 
 
 @require_http_methods(["POST"])
-@csrf_exempt
+@csrf_exempt  # Keep exempt for public form, but add rate limiting
+@rate_limit('api_contact_form', limit=5, period=300)  # 5 requests per 5 minutes
 def api_contact_form(request):
     """Create pending submission and email verification link to the user."""
     try:
         data = json.loads(request.body)
-        name = data.get('name', '')
+        
+        # Validate and sanitize inputs
+        name = sanitize_string(data.get('name', ''), max_length=200)
         email = data.get('email', '')
-        message = data.get('message', '')
-        subject = data.get('subject', 'general')
+        message = sanitize_text_field(data.get('message', ''), max_length=5000)
+        subject = sanitize_string(data.get('subject', 'general'), max_length=200)
         phone = data.get('phone', '')
 
+        # Validate required fields
         if not name or not email or not message or not subject:
             return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+        
+        # Validate email
+        try:
+            email = validate_email_address(email)
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        
+        # Validate phone if provided
+        if phone:
+            try:
+                phone = validate_phone(phone)
+            except ValidationError as e:
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
         token = get_random_string(48)
         ContactSubmission.objects.create(
             name=name,
             email=email,
-            phone=phone,
+            phone=phone or '',
             subject=subject,
             message=message,
             verification_token=token,
@@ -1348,10 +1387,13 @@ def api_contact_form(request):
                 merge_data={'verify_link': verify_link, 'name': name}
             )
             if not sent:
+                # Escape name and verify_link to prevent XSS in email
+                safe_name = escape(name)
+                safe_verify_link = escape(verify_link)
                 html = f"""
                 <div style=\"font-family: Arial, Helvetica, sans-serif; color:#1e1e1e; line-height:1.5;\">
                   <h2 style=\"margin:0 0 10px 0; color:#2d5a2d;\">Verify your email to send your message</h2>
-                  <p style=\"margin:0 0 12px 0;\">Hello {name},</p>
+                  <p style=\"margin:0 0 12px 0;\">Hello {safe_name},</p>
                   <p style=\"margin:0 0 8px 0;\">Please confirm your email address to send your message to <strong>City College of Bayawan</strong>.</p>
                   
                   <div style=\"margin:16px 0; padding:20px; background-color:#f8f9fa; border-left:4px solid #2d5a2d; border-radius:4px;\">
@@ -1362,9 +1404,9 @@ def api_contact_form(request):
                     <div style=\"margin:0 0 4px 0; color:#333; font-size:14px;\">(035) 522-0409</div>   
                   </div>
                   
-                  <p style=\"margin:0 0 22px 0;\">\n                    <a href=\"{verify_link}\" style=\"background:#ff8c00; color:#ffffff; text-decoration:none; padding:10px 16px; border-radius:6px; font-weight:700; display:inline-block;\">Verify Email</a>
+                  <p style=\"margin:0 0 22px 0;\">\n                    <a href=\"{safe_verify_link}\" style=\"background:#ff8c00; color:#ffffff; text-decoration:none; padding:10px 16px; border-radius:6px; font-weight:700; display:inline-block;\">Verify Email</a>
                   </p>
-                  <p style=\"margin:0 0 18px 0; font-size:12px; color:#666;\">If the button doesn't work, copy and paste this link into your browser:<br><span style=\"word-break:break-all;\"><a href=\"{verify_link}\" style=\"color:#2d5a2d;\">{verify_link}</a></span></p>
+                  <p style=\"margin:0 0 18px 0; font-size:12px; color:#666;\">If the button doesn't work, copy and paste this link into your browser:<br><span style=\"word-break:break-all;\"><a href=\"{safe_verify_link}\" style=\"color:#2d5a2d;\">{safe_verify_link}</a></span></p>
                   <hr style=\"border:none; border-top:1px solid #e6e6e6; margin:16px 0;\"/>
                   <p style=\"margin:10px 0 0 0; font-size:12px; color:#666;\">This link expires in 24 hours. If you did not request this, please ignore this email.</p>
                 </div>
@@ -1386,18 +1428,30 @@ def api_contact_form(request):
 
 
 @require_http_methods(["POST"])
-@csrf_exempt
+@ensure_csrf_cookie  # Ensure CSRF cookie is set
+@rate_limit('api_admin_login', limit=5, period=300)  # 5 attempts per 5 minutes
 def api_admin_login(request):
-    """Admin login endpoint"""
+    """Admin login endpoint - CSRF protected"""
     try:
         data = json.loads(request.body)
-        username = data.get('username', '')
+        
+        # Sanitize username (no password sanitization needed - Django handles it)
+        username = sanitize_string(data.get('username', ''), max_length=150)
         password = data.get('password', '')
 
         if not username or not password:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Username and password are required'
+            }, status=400)
+        
+        # Additional SQL injection check
+        try:
+            prevent_sql_injection(username)
+        except ValidationError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid credentials'
             }, status=400)
 
         # Authenticate user
