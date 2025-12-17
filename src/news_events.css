@@ -480,7 +480,7 @@ html.modal-open {
 
 /* Date Detail Modal */
 .date-detail-modal {
-  max-width: min(90vw, 700px);
+  max-width: min(85vw, 1000px);
 }
 
 .date-detail-modal .modal-close:hover {
@@ -496,7 +496,7 @@ html.modal-open {
 }
 
 .date-detail-content {
-  width: 100%;
+  width: 108%;
   max-height: calc(100vh - 200px);
   overflow-y: auto;
   padding: 0px 0 50x 0;
@@ -543,6 +543,8 @@ html.modal-open {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: -23px;
+  margin-bottom: -12px;
 }
 
 .date-detail-item {
@@ -892,7 +894,7 @@ html.modal-open {
   }
   
   .date-detail-modal {
-    max-width: 96vw;
+    max-width: 110vw;
     padding: 14px 12px;
   }
   
@@ -1852,11 +1854,6 @@ html.modal-open {
   gap: 12px;
   background: #f8f8f8;
   text-align: center;
-}
-
-.news-item:hover .news-icon {
-  background: linear-gradient(135deg, #ff8c00, #ff9f1a);
-  transform: scale(1.1);
 }
 
 .news-item-content h4 {

@@ -1305,26 +1305,26 @@ const NewsEvents = () => {
             <div className="date-detail-content">
               {selectedDateItems.events.length > 0 && (
                 <div className="date-detail-section">
-                  <h4 className="date-detail-section-title">
-                    <span className="date-detail-icon event-icon">📅</span>
-                    <span className="date-detail-text-1">Events ({selectedDateItems.events.length})</span>
-                  </h4>
-                  <div className="date-detail-items">
-                    {selectedDateItems.events.map((evt) => (
-                      <button
-                        key={evt.id}
-                        className="date-detail-item event-item-btn"
-                        onClick={() => {
-                          closeDateDetailModal();
-                          openEventModal(evt);
-                        }}
-                      >
-                        <span className="item-type">Event:</span>
-                        <span className="item-title">{evt.title}</span>
-                      </button>
-                    ))}
-                  </div>
+                <h4 className="date-detail-section-title">
+                  <span className="date-detail-icon event-icon"></span>
+                  <span className="date-detail-text">📅 Events ({selectedDateItems.events.length})</span>
+                </h4>
+                <div className="date-detail-items">
+                  {selectedDateItems.events.map((event) => (
+                    <button
+                      key={event.id}
+                      className="date-detail-item event-item-btn"
+                      onClick={() => {
+                        closeDateDetailModal();
+                        openEventModal(event);
+                      }}
+                    >
+                      <span className="item-type">Event:</span>
+                      <span className="item-title">{event.title}</span>
+                    </button>
+                  ))}
                 </div>
+              </div>
               )}
 
               {selectedDateItems.news.length > 0 && (
