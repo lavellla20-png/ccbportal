@@ -1457,7 +1457,7 @@ html.modal-open {
   opacity: 1;
   transform: translateY(0);
 }
-
+  
 .event-item {
   background: #fff;
   border-radius: 15px;
@@ -1988,7 +1988,6 @@ html.modal-open {
 .achievement-item:hover {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   border-color: #2d5a2d;
-  transform: translateY(-5px);
 }
 
 .achievement-image-wrapper {

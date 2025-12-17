@@ -24,7 +24,12 @@ urlpatterns = [
     path('', include('portal.urls')),
 ]
 
-# Serve static files during development
+# Serve static and media files during development
+# Note: In production, these should be served by the web server (nginx, etc.)
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Also serve media files even when DEBUG=False (for development server)
+    # In production, configure your web server to serve /media/ directly
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

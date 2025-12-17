@@ -3,7 +3,6 @@ import './contactuss.css';
 import Navbar from './components/Navbar';
 import Footer from './components/footer';
 import ScrollToTop from './components/ScrollToTop';
-import { sanitizeString, sanitizeText, validateEmail, validatePhone } from './utils/security';
 
 const ContactUs = () => {
   const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000';
@@ -23,19 +22,9 @@ const ContactUs = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Sanitize input based on field type
-    let sanitizedValue = value;
-    if (name === 'message') {
-      sanitizedValue = sanitizeText(value, 5000);
-    } else if (name === 'email') {
-      sanitizedValue = value.trim().toLowerCase(); // Email validation happens on submit
-    } else {
-      sanitizedValue = sanitizeString(value, name === 'name' ? 200 : name === 'subject' ? 200 : 50);
-    }
-    
     setFormData(prev => ({
       ...prev,
-      [name]: sanitizedValue
+      [name]: value
     }));
   };
 
@@ -44,21 +33,6 @@ const ContactUs = () => {
     setIsSubmitting(true);
     setSubmitStatus('');
     setErrorMessage('');
-  
-    // Validate inputs before submission
-    if (!validateEmail(formData.email)) {
-      setErrorMessage('Please enter a valid email address');
-      setSubmitStatus('error');
-      setIsSubmitting(false);
-      return;
-    }
-    
-    if (formData.phone && !validatePhone(formData.phone)) {
-      setErrorMessage('Please enter a valid phone number');
-      setSubmitStatus('error');
-      setIsSubmitting(false);
-      return;
-    }
   
     try {
       const response = await fetch(`${API_BASE}/api/contact/`, {

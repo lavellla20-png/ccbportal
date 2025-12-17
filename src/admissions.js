@@ -13,9 +13,16 @@ const Admissions = () => {
   const [selectedCategory, setSelectedCategory] = useState('new-scholar');
   const [admissionsData, setAdmissionsData] = useState({
     requirements: {},
-    processSteps: [],
+    processSteps: {},
     notes: []
   });
+  
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('Admissions data state updated:', admissionsData);
+    console.log('Selected category:', selectedCategory);
+    console.log('Process steps for category:', admissionsData.processSteps?.[selectedCategory]);
+  }, [admissionsData, selectedCategory]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -69,32 +76,49 @@ const Admissions = () => {
   }, []);
 
   // Intersection Observer for process-timeline section
+  // Re-run when data changes or category changes to catch the element when it's rendered
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsProcessTimelineVisible(true);
-          }
-        });
-      },
-      {
-        threshold: 0.1, // Trigger when 10% of the element is visible
-        rootMargin: '0px 0px -50px 0px' // Start animation 50px before element comes into view
-      }
-    );
+    // Reset visibility when category or data changes
+    setIsProcessTimelineVisible(false);
+    
+    // Small delay to ensure DOM is updated
+    const timeoutId = setTimeout(() => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setIsProcessTimelineVisible(true);
+            }
+          });
+        },
+        {
+          threshold: 0.1, // Trigger when 10% of the element is visible
+          rootMargin: '0px 0px -50px 0px' // Start animation 50px before element comes into view
+        }
+      );
 
-    const processTimelineElement = document.querySelector('.process-timeline');
-    if (processTimelineElement) {
-      observer.observe(processTimelineElement);
-    }
+      const processTimelineElement = document.querySelector('.process-timeline');
+      if (processTimelineElement) {
+        observer.observe(processTimelineElement);
+        // If element is already in viewport, trigger immediately
+        const rect = processTimelineElement.getBoundingClientRect();
+        const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+        if (isInViewport) {
+          setIsProcessTimelineVisible(true);
+        }
+      }
+
+      return () => {
+        if (processTimelineElement) {
+          observer.unobserve(processTimelineElement);
+        }
+      };
+    }, 100);
 
     return () => {
-      if (processTimelineElement) {
-        observer.unobserve(processTimelineElement);
-      }
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [admissionsData.processSteps, selectedCategory, loading]);
 
   // Fetch admissions data
   useEffect(() => {
@@ -103,9 +127,41 @@ const Admissions = () => {
         setLoading(true);
         setError(null);
         const data = await apiService.getAdmissionsInfo();
+        
+        console.log('Admissions data received:', data); // Debug log
+        
+        // Use process_steps_by_category if available, otherwise group from flat list
+        let processStepsByCategory = {};
+        
+        // First, try to use the grouped data from backend
+        if (data.process_steps_by_category && typeof data.process_steps_by_category === 'object') {
+          processStepsByCategory = data.process_steps_by_category;
+          console.log('Using process_steps_by_category from API:', processStepsByCategory); // Debug log
+        }
+        
+        // Also check if we have a flat list and need to group it (or if grouped data is empty)
+        if (data.process_steps && Array.isArray(data.process_steps) && data.process_steps.length > 0) {
+          // Check if grouped data has any steps, if not, group from flat list
+          const hasGroupedSteps = Object.values(processStepsByCategory).some(steps => Array.isArray(steps) && steps.length > 0);
+          
+          if (!hasGroupedSteps) {
+            console.log('Grouped data empty, grouping from flat list:', data.process_steps); // Debug log
+            data.process_steps.forEach(step => {
+              const category = step.category || 'new-scholar';
+              if (!processStepsByCategory[category]) {
+                processStepsByCategory[category] = [];
+              }
+              processStepsByCategory[category].push(step);
+            });
+          }
+        }
+        
+        console.log('Final processStepsByCategory:', processStepsByCategory); // Debug log
+        console.log('Steps for new-scholar:', processStepsByCategory['new-scholar']); // Debug log
+        
         setAdmissionsData({
           requirements: data.requirements || {},
-          processSteps: data.process_steps || [],
+          processSteps: processStepsByCategory,
           notes: data.notes || []
         });
       } catch (err) {
@@ -114,7 +170,7 @@ const Admissions = () => {
         // Set default/fallback data
         setAdmissionsData({
           requirements: {},
-          processSteps: [],
+          processSteps: {},
           notes: []
         });
       } finally {
@@ -285,31 +341,54 @@ const Admissions = () => {
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#dc3545' }}>
                   <p>{error}</p>
                 </div>
-              ) : admissionsData.processSteps && admissionsData.processSteps.length > 0 ? (
-                <div className={`process-timeline ${isProcessTimelineVisible ? 'fade-in-visible' : ''}`}>
-                  {admissionsData.processSteps.map((step, index) => (
-                    <div key={step.id || index} className="timeline-item">
-                      <div className="timeline-number">{step.step_number || index + 1}</div>
-                      <div className="timeline-content">
-                        <h4>{step.title}</h4>
-                        <p dangerouslySetInnerHTML={{ 
-                          __html: step.description
-                            .replace(/&/g, '&amp;')
-                            .replace(/</g, '&lt;')
-                            .replace(/>/g, '&gt;')
-                            .replace(/"/g, '&quot;')
-                            .replace(/'/g, '&#039;')
-                            .replace(/\n/g, '<br />') 
-                        }}></p>
-                      </div>
+              ) : (() => {
+                // Get steps for selected category
+                const currentSteps = admissionsData.processSteps?.[selectedCategory];
+                
+                // Debug logging
+                console.log('Rendering Enrollment Process:', {
+                  selectedCategory,
+                  allProcessSteps: admissionsData.processSteps,
+                  currentSteps,
+                  stepsCount: currentSteps?.length || 0
+                });
+                
+                // Check if we have steps for the selected category
+                if (currentSteps && Array.isArray(currentSteps) && currentSteps.length > 0) {
+                  // Always show the timeline - animation is optional
+                  return (
+                    <div className="process-timeline fade-in-visible">
+                      {currentSteps.map((step, index) => (
+                        <div key={step.id || `step-${index}`} className="timeline-item">
+                          <div className="timeline-number">{step.step_number || index + 1}</div>
+                          <div className="timeline-content">
+                            <h4>{step.title || 'Untitled Step'}</h4>
+                            <p dangerouslySetInnerHTML={{ 
+                              __html: (step.description || 'No description available')
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;')
+                                .replace(/'/g, '&#039;')
+                                .replace(/\n/g, '<br />') 
+                            }}></p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  <p>No enrollment process steps available at this time.</p>
-                </div>
-              )}
+                  );
+                } else {
+                  // Show helpful message
+                  return (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                      <p>No enrollment process steps available for this category at this time.</p>
+                      <p style={{ fontSize: '0.9rem', marginTop: '10px', color: '#999' }}>
+                        Please check back later or contact the admissions office for more information.
+                      </p>
+                    </div>
+                  );
+                }
+              })()}
               
               <div className="section-cta">
                 <a href="/contact" className="btn btn-secondary">Contact Admissions Office</a>

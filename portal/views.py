@@ -308,10 +308,29 @@ def api_admissions_info(request):
             for req in requirements
         ]
     
-    # Get enrollment process steps
+    # Get enrollment process steps grouped by category
+    process_steps_by_category = {}
+    for category, _ in EnrollmentProcessStep.CATEGORY_CHOICES:
+        steps = EnrollmentProcessStep.objects.filter(
+            category=category,
+            is_active=True
+        ).order_by('display_order', 'step_number')
+        process_steps_by_category[category] = [
+            {
+                'id': step.id,
+                'step_number': step.step_number,
+                'title': step.title,
+                'description': step.description,
+                'display_order': step.display_order
+            }
+            for step in steps
+        ]
+    
+    # Also provide a flat list for backward compatibility
+    # Include steps even if they don't have a category (for backward compatibility)
     process_steps = EnrollmentProcessStep.objects.filter(
         is_active=True
-    ).order_by('display_order', 'step_number')
+    ).order_by('category', 'display_order', 'step_number')
     
     process_steps_data = [
         {
@@ -319,10 +338,34 @@ def api_admissions_info(request):
             'step_number': step.step_number,
             'title': step.title,
             'description': step.description,
+            'category': getattr(step, 'category', 'new-scholar'),  # Default to 'new-scholar' if category doesn't exist
             'display_order': step.display_order
         }
         for step in process_steps
     ]
+    
+    # Also add any steps that might have been missed (e.g., NULL categories or migration issues)
+    # Get all active steps and ensure they're in the grouped data
+    all_active_steps = EnrollmentProcessStep.objects.filter(is_active=True)
+    for step in all_active_steps:
+        step_category = getattr(step, 'category', None) or 'new-scholar'
+        # Ensure the category exists in our grouped data
+        if step_category not in process_steps_by_category:
+            process_steps_by_category[step_category] = []
+        # Check if this step is already in the list (avoid duplicates)
+        step_ids = [s['id'] for s in process_steps_by_category[step_category]]
+        if step.id not in step_ids:
+            process_steps_by_category[step_category].append({
+                'id': step.id,
+                'step_number': step.step_number,
+                'title': step.title,
+                'description': step.description,
+                'display_order': step.display_order
+            })
+    
+    # Sort each category's steps by display_order and step_number
+    for category in process_steps_by_category:
+        process_steps_by_category[category].sort(key=lambda x: (x.get('display_order', 0), x.get('step_number', 0)))
     
     # Get admission notes
     notes = AdmissionNote.objects.filter(
@@ -341,7 +384,8 @@ def api_admissions_info(request):
     
     admissions_data = {
         'requirements': requirements_by_category,
-        'process_steps': process_steps_data,
+        'process_steps': process_steps_data,  # Flat list for backward compatibility
+        'process_steps_by_category': process_steps_by_category,  # Grouped by category
         'notes': notes_data
     }
     return JsonResponse(admissions_data)
@@ -2986,10 +3030,12 @@ def api_delete_admission_requirement(request, requirement_id):
 @require_http_methods(["GET"])
 def api_admin_enrollment_steps(request):
     """Get all enrollment process steps (admin)"""
-    steps = EnrollmentProcessStep.objects.all().order_by('display_order', 'step_number')
+    steps = EnrollmentProcessStep.objects.all().order_by('category', 'display_order', 'step_number')
     steps_data = [
         {
             'id': step.id,
+            'category': step.category,
+            'category_display': step.get_category_display(),
             'step_number': step.step_number,
             'title': step.title,
             'description': step.description,
@@ -3020,6 +3066,7 @@ def api_create_enrollment_step(request):
             return JsonResponse({'status': 'error', 'message': 'Description is required'}, status=400)
         
         step = EnrollmentProcessStep.objects.create(
+            category=data.get('category', 'new-scholar'),
             step_number=data.get('step_number'),
             title=data.get('title', '').strip(),
             description=data.get('description', '').strip(),
@@ -3030,6 +3077,8 @@ def api_create_enrollment_step(request):
             'status': 'success',
             'step': {
                 'id': step.id,
+                'category': step.category,
+                'category_display': step.get_category_display(),
                 'step_number': step.step_number,
                 'title': step.title,
                 'description': step.description,
@@ -3052,6 +3101,8 @@ def api_update_enrollment_step(request, step_id):
         step = get_object_or_404(EnrollmentProcessStep, id=step_id)
         data = json.loads(request.body)
         
+        if 'category' in data:
+            step.category = data.get('category', 'new-scholar')
         if 'step_number' in data:
             step.step_number = data.get('step_number')
         if 'title' in data:
@@ -3069,6 +3120,8 @@ def api_update_enrollment_step(request, step_id):
             'status': 'success',
             'step': {
                 'id': step.id,
+                'category': step.category,
+                'category_display': step.get_category_display(),
                 'step_number': step.step_number,
                 'title': step.title,
                 'description': step.description,

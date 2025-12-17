@@ -209,6 +209,7 @@ const AdminPage = () => {
       defaultFormData.is_active = true;
       defaultFormData.display_order = 0;
     } else if (activeTab === 'enrollment-steps') {
+      defaultFormData.category = 'new-scholar';
       defaultFormData.step_number = 1;
       defaultFormData.is_active = true;
       defaultFormData.display_order = 0;
@@ -601,6 +602,7 @@ const AdminPage = () => {
           break;
         case 'enrollment-steps':
           const stepData = {
+            category: formData.category || 'new-scholar', // Ensure category is always set
             step_number: Number(formData.step_number) || 1,
             title: formData.title || '',
             description: formData.description || '',
@@ -907,7 +909,7 @@ const AdminPage = () => {
       case 'admission-requirements':
         return ['Category', 'Requirement', 'Status'];
       case 'enrollment-steps':
-        return ['Step', 'Title', 'Status'];
+        return ['Category', 'Step', 'Title', 'Status'];
       case 'admission-notes':
         return ['Title', 'Status'];
       default:
@@ -982,6 +984,7 @@ const AdminPage = () => {
         ];
       case 'enrollment-steps':
         return [
+          item.category_display || item.category || 'N/A',
           item.step_number || 'N/A',
           item.title || 'N/A',
           item.is_active ? 'Active' : 'Inactive'
@@ -1938,6 +1941,20 @@ const AdminPage = () => {
       case 'enrollment-steps':
         return (
           <>
+            <div className="form-group">
+              <label>Category *</label>
+              <select
+                name="category"
+                value={formData.category || 'new-scholar'}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="new-scholar">New Student (Scholar)</option>
+                <option value="new-non-scholar">New Student (Non-Scholar)</option>
+                <option value="continuing-scholar">Continuing Student (Scholar)</option>
+                <option value="continuing-non-scholar">Continuing Student (Non-Scholar)</option>
+              </select>
+            </div>
             <div className="form-group">
               <label>Step Number *</label>
               <input

@@ -337,6 +337,14 @@ class AdmissionRequirement(models.Model):
 class EnrollmentProcessStep(models.Model):
     """Model for enrollment process steps"""
     
+    CATEGORY_CHOICES = [
+        ('new-scholar', 'New Student (Scholar)'),
+        ('new-non-scholar', 'New Student (Non-Scholar)'),
+        ('continuing-scholar', 'Continuing Student (Scholar)'),
+        ('continuing-non-scholar', 'Continuing Student (Non-Scholar)'),
+    ]
+    
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='new-scholar', help_text="Student category")
     step_number = models.PositiveIntegerField(help_text="Step number in the process")
     title = models.CharField(max_length=200, help_text="Step title")
     description = models.TextField(help_text="Step description")
@@ -346,12 +354,12 @@ class EnrollmentProcessStep(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['display_order', 'step_number']
+        ordering = ['category', 'display_order', 'step_number']
         verbose_name = 'Enrollment Process Step'
         verbose_name_plural = 'Enrollment Process Steps'
     
     def __str__(self):
-        return f"Step {self.step_number}: {self.title}"
+        return f"{self.get_category_display()}: Step {self.step_number}: {self.title}"
 
 
 class AdmissionNote(models.Model):

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './login.css';
 import apiService from '../services/api';
-import { sanitizeString } from '../utils/security';
 
 const AdminLogin = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
@@ -16,11 +15,9 @@ const AdminLogin = ({ onLoginSuccess }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Sanitize input to prevent XSS
-    const sanitizedValue = name === 'password' ? value : sanitizeString(value, 150);
     setFormData(prev => ({
       ...prev,
-      [name]: sanitizedValue
+      [name]: value
     }));
     // Clear error when user starts typing
     if (error) setError(null);
@@ -38,15 +35,12 @@ const AdminLogin = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Additional sanitization before submission
-    const sanitizedUsername = sanitizeString(formData.username, 150);
-    
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await apiService.login(sanitizedUsername, formData.password);
+      const response = await apiService.login(formData.username, formData.password);
       
       if (response.status === 'success') {
         setSuccess('Login successful! Redirecting...');

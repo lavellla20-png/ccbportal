@@ -103,6 +103,14 @@ html, body {
   animation: fadeInUp 0.6s ease forwards;
 }
 
+.admissions-content .timeline-content h4 {
+  font-size: 1.1rem;
+  margin-top: -2px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #343a40;
+}
+
 .enrollment-requirements h4,
 .transferee-requirements h4 {
   color: #1a472a;
@@ -321,6 +329,15 @@ html, body {
   flex-direction: column;
   gap: 60px;
   margin: 19px 0;
+  overflow: visible;
+  width: 100%;
+  max-width: 100%;
+}
+
+.process-section {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
 }
 
 /* Section Headers */
@@ -717,14 +734,21 @@ html, body {
 
 /* Process Timeline */
 .process-timeline {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s ease-out;
+  opacity: 1;
+  transform: translateY(0);
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  position: relative;
+  /* Start visible by default - animation is optional enhancement */
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
 .process-timeline.fade-in-visible {
   opacity: 1;
   transform: translateY(0);
+  /* Animation class for smooth fade-in when element comes into view */
+  animation: fadeInUp 0.8s ease-out;
 }
 
 .timeline-number {
@@ -756,23 +780,51 @@ html, body {
   border: 4px solid white;
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 3;
 }
 
 .timeline-item {
   position: relative;
-  margin-bottom: 15px;
+  margin-bottom: 30px;
   padding-left: 60px;
+  min-height: 60px;
+  width: 100%;
+  overflow: visible;
 }
 
 .timeline-item:not(:last-child)::after {
   content: '';
   position: absolute;
   left: 24px;
-  top: 50px;
+  top: 86px;
   width: 2px;
-  height: calc(100% + 1rem);
+  height: calc(100% - 20px);
+  min-height: 30px;
   background: linear-gradient(180deg, #2d5a2d, #ff8c00);
   z-index: 1;
+}
+
+.timeline-content {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  padding-right: 20px;
+}
+
+.timeline-content h4 {
+  font-size: 1.1rem;
+  margin-top: 10px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #343a40;
+}
+
+.timeline-content p {
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Responsive Design */
@@ -830,6 +882,34 @@ html, body {
 
   .step-number {
     align-self: center;
+  }
+
+  .timeline-item {
+    margin-bottom: 25px;
+    padding-left: 50px;
+  }
+
+  .timeline-number {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+    margin-top: 30px;
+  }
+
+  .timeline-item::before {
+    left: 10px;
+    top: 38px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .timeline-item:not(:last-child)::after {
+    left: 21px;
+    top: 73px;
+  }
+
+  .timeline-content {
+    padding-right: 10px;
   }
 
   .dates-grid {
@@ -902,6 +982,38 @@ html, body {
 
   .step-item {
     padding: 20px 15px;
+  }
+
+  .timeline-item {
+    margin-bottom: 20px;
+    padding-left: 45px;
+  }
+
+  .timeline-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    margin-top: 25px;
+  }
+
+  .timeline-item::before {
+    left: 8px;
+    top: 32px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .timeline-item:not(:last-child)::after {
+    left: 19px;
+    top: 62px;
+  }
+
+  .timeline-content h4 {
+    font-size: 1rem;
+  }
+
+  .timeline-content p {
+    font-size: 0.9rem;
   }
 
   .date-item {

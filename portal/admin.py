@@ -106,13 +106,13 @@ class AdmissionRequirementAdmin(admin.ModelAdmin):
 
 @admin.register(EnrollmentProcessStep)
 class EnrollmentProcessStepAdmin(admin.ModelAdmin):
-    list_display = ('step_number', 'title', 'display_order', 'is_active')
-    list_filter = ('is_active',)
+    list_display = ('category', 'step_number', 'title', 'display_order', 'is_active')
+    list_filter = ('category', 'is_active')
     search_fields = ('title', 'description')
-    ordering = ('display_order', 'step_number')
+    ordering = ('category', 'display_order', 'step_number')
     fieldsets = (
         ('Step Information', {
-            'fields': ('step_number', 'title', 'description')
+            'fields': ('category', 'step_number', 'title', 'description')
         }),
         ('Display Settings', {
             'fields': ('is_active', 'display_order')
