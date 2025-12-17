@@ -98,6 +98,12 @@ urlpatterns = [
     path('api/admin/institutional-info/', views.api_admin_institutional_info, name='api_admin_institutional_info'),
     path('api/admin/institutional-info/update/', views.api_update_institutional_info, name='api_update_institutional_info'),
     
+    # Admin-only CRUD endpoints for Downloads
+    path('api/admin/downloads/', views.api_admin_downloads, name='api_admin_downloads'),
+    path('api/admin/downloads/create/', views.api_create_download, name='api_create_download'),
+    path('api/admin/downloads/<int:download_id>/', views.api_update_download, name='api_update_download'),
+    path('api/admin/downloads/<int:download_id>/delete/', views.api_delete_download, name='api_delete_download'),
+    
     # Handle webpack hot-update requests to suppress 404 errors
     # These files are served by webpack-dev-server (port 3000), not Django
     re_path(r'^.*\.hot-update\.(js|json)$', views.handle_hot_update, name='handle_hot_update'),

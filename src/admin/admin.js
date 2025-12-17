@@ -36,6 +36,7 @@ const AdminPage = () => {
   const [enrollmentSteps, setEnrollmentSteps] = useState([]);
   const [admissionNotes, setAdmissionNotes] = useState([]);
   const [institutionalInfo, setInstitutionalInfo] = useState(null);
+  const [downloads, setDownloads] = useState([]);
 
   // Form states
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +47,7 @@ const AdminPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [programsRes, eventsRes, achievementsRes, announcementsRes, newsRes, departmentsRes, personnelRes, requirementsRes, stepsRes, notesRes, institutionalInfoRes] = await Promise.all([
+      const [programsRes, eventsRes, achievementsRes, announcementsRes, newsRes, departmentsRes, personnelRes, requirementsRes, stepsRes, notesRes, institutionalInfoRes, downloadsRes] = await Promise.all([
         apiService.getAdminAcademicPrograms(),
         apiService.getAdminEvents(),
         apiService.getAdminAchievements(),
@@ -57,7 +58,8 @@ const AdminPage = () => {
         apiService.getAdminAdmissionRequirements(),
         apiService.getAdminEnrollmentSteps(),
         apiService.getAdminAdmissionNotes(),
-        apiService.getAdminInstitutionalInfo()
+        apiService.getAdminInstitutionalInfo(),
+        apiService.getAdminDownloads()
       ]);
 
       setAcademicPrograms(programsRes.programs || []);
@@ -71,6 +73,7 @@ const AdminPage = () => {
       setEnrollmentSteps(stepsRes.steps || []);
       setAdmissionNotes(notesRes.notes || []);
       setInstitutionalInfo(institutionalInfoRes.institutional_info || null);
+      setDownloads(downloadsRes.downloads || []);
       
       showAlert('info', 'Data Loaded', 'All data has been loaded successfully.');
     } catch (err) {
@@ -247,6 +250,10 @@ const AdminPage = () => {
         defaultFormData.core_values = '';
         defaultFormData.is_active = true;
       }
+    } else if (activeTab === 'downloads') {
+      defaultFormData.category = 'other';
+      defaultFormData.is_active = true;
+      defaultFormData.display_order = 0;
     }
     setFormData(defaultFormData);
     setShowForm(true);
@@ -268,6 +275,13 @@ const AdminPage = () => {
       editData.goals = item.goals || '';
       editData.core_values = item.core_values || '';
       editData.is_active = item.is_active !== undefined ? item.is_active : true;
+    }
+    if (activeTab === 'downloads') {
+      editData.title = item.title || '';
+      editData.description = item.description || '';
+      editData.category = item.category || 'other';
+      editData.is_active = item.is_active !== undefined ? item.is_active : true;
+      editData.display_order = item.display_order || 0;
     }
     // Format date fields for HTML date inputs (YYYY-MM-DD format)
     if (activeTab === 'news') {
@@ -384,6 +398,10 @@ const AdminPage = () => {
           // Institutional info cannot be deleted, only edited
           showAlert('warning', 'Cannot Delete', 'Institutional information cannot be deleted. You can only edit it.');
           return;
+        case 'downloads':
+          await apiService.deleteDownload(item.id);
+          setDownloads(prev => prev.filter(d => d.id !== item.id));
+          break;
         default:
           throw new Error(`Unknown type: ${type}`);
       }
@@ -680,6 +698,45 @@ const AdminPage = () => {
             setNews(prev => [...prev, result.news]);
           }
           break;
+        case 'downloads': {
+          // Prepare FormData for file upload
+          const downloadFormData = new FormData();
+          
+          // Ensure all required fields are present
+          if (!formData.title) {
+            throw new Error('Title is required');
+          }
+          
+          downloadFormData.append('title', formData.title.trim());
+          downloadFormData.append('description', formData.description || '');
+          downloadFormData.append('category', formData.category || 'other');
+          downloadFormData.append('is_active', formData.is_active ? 'true' : 'false');
+          downloadFormData.append('display_order', String(formData.display_order || 0));
+          
+          // Handle file upload (required for create, optional for update)
+          if (formData.file && formData.file instanceof File) {
+            downloadFormData.append('file', formData.file);
+          }
+          
+          // Handle file removal
+          if (formData.remove_file) {
+            downloadFormData.append('remove_file', 'true');
+          }
+          
+          if (isEditing) {
+            // For updates, file is optional
+            result = await apiService.updateDownload(editingItem.id, downloadFormData);
+            setDownloads(prev => prev.map(d => d.id === editingItem.id ? result.download : d));
+          } else {
+            // For creates, file is required
+            if (!formData.file || !(formData.file instanceof File)) {
+              throw new Error('File is required when creating a new download');
+            }
+            result = await apiService.createDownload(downloadFormData);
+            setDownloads(prev => [...prev, result.download]);
+          }
+          break;
+        }
         default:
           throw new Error(`Unknown active tab: ${activeTab}`);
       }
@@ -788,6 +845,13 @@ const AdminPage = () => {
           <div className="stat-content">
             <h3>{admissionNotes.length}</h3>
             <p>Admission Notes</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon"><i className="fas fa-download"></i></div>
+          <div className="stat-content">
+            <h3>{downloads.length}</h3>
+            <p>Downloads</p>
           </div>
         </div>
       </div>
@@ -912,6 +976,8 @@ const AdminPage = () => {
         return ['Category', 'Step', 'Title', 'Status'];
       case 'admission-notes':
         return ['Title', 'Status'];
+      case 'downloads':
+        return ['Title', 'Category', 'File Type', 'Status'];
       default:
         return [];
     }
@@ -994,6 +1060,13 @@ const AdminPage = () => {
           item.title || 'N/A',
           item.is_active ? 'Active' : 'Inactive'
         ];
+      case 'downloads':
+        return [
+          item.title || 'N/A',
+          item.category_display || item.category || 'N/A',
+          item.file_type || 'N/A',
+          item.is_active ? 'Active' : 'Inactive'
+        ];
       default:
         return [];
     }
@@ -1038,7 +1111,8 @@ const AdminPage = () => {
       { key: 'admission-requirements', label: 'Admission Requirements', icon: 'fas fa-file-alt' },
       { key: 'enrollment-steps', label: 'Enrollment Steps', icon: 'fas fa-list-ol' },
       { key: 'admission-notes', label: 'Admission Notes', icon: 'fas fa-sticky-note' },
-      { key: 'institutional-info', label: 'Institutional Info', icon: 'fas fa-university' }
+      { key: 'institutional-info', label: 'Institutional Info', icon: 'fas fa-university' },
+      { key: 'downloads', label: 'Downloads', icon: 'fas fa-download' }
     ];
 
     return (
@@ -2238,6 +2312,116 @@ const AdminPage = () => {
             </div>
           </>
         );
+      case 'downloads':
+        return (
+          <>
+            <div className="form-group">
+              <label>Title *</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Description</label>
+              <textarea
+                name="description"
+                value={formData.description || ''}
+                onChange={handleInputChange}
+                rows="3"
+                placeholder="Brief description of the download"
+              />
+            </div>
+            <div className="form-group">
+              <label>Category *</label>
+              <select
+                name="category"
+                value={formData.category || 'other'}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="forms-enrollment">Forms - Enrollment</option>
+                <option value="forms-clearance">Forms - Clearance</option>
+                <option value="forms-request">Forms - Request</option>
+                <option value="forms-shift-change">Forms - Shift/Change</option>
+                <option value="hr-policies">HR Policies</option>
+                <option value="hr-forms">HR Forms</option>
+                <option value="syllabi">Syllabi</option>
+                <option value="manuals">Manuals</option>
+                <option value="handbooks">Handbooks</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>File {!editingItem ? '*' : ''}</label>
+              <input
+                type="file"
+                name="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar"
+                onChange={handleInputChange}
+                required={!editingItem}
+              />
+              {formData.file && formData.file instanceof File && (
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{ color: '#666', fontSize: '0.9rem' }}>Selected: {formData.file.name}</p>
+                  <p style={{ color: '#666', fontSize: '0.85rem' }}>Size: {(formData.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+              )}
+              {editingItem && editingItem.file_url && !formData.file && (
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{ color: '#666', fontSize: '0.9rem' }}>Current file:</p>
+                  <a 
+                    href={editingItem.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ color: '#1976d2', textDecoration: 'underline' }}
+                  >
+                    {editingItem.title} ({editingItem.file_type || 'FILE'})
+                  </a>
+                  <label className="checkbox-label" style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      name="remove_file"
+                      checked={formData.remove_file || false}
+                      onChange={handleInputChange}
+                    />
+                    Remove current file
+                  </label>
+                </div>
+              )}
+              <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                Upload a file for download. Accepted formats: PDF, DOC, DOCX, XLS, XLSX, ZIP, RAR. Max size: 50MB.
+                {editingItem && ' Leave empty to keep current file.'}
+              </small>
+            </div>
+            <div className="form-row-inline">
+              <div className="form-group">
+                <label>Display Order</label>
+                <input
+                  type="number"
+                  name="display_order"
+                  value={formData.display_order || 0}
+                  onChange={handleInputChange}
+                  min="0"
+                />
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={formData.is_active || false}
+                    onChange={handleInputChange}
+                  />
+                  Active
+                </label>
+              </div>
+            </div>
+          </>
+        );
       default:
         return null;
     }
@@ -2457,6 +2641,7 @@ const AdminPage = () => {
             {activeTab === 'enrollment-steps' && renderDataTable(enrollmentSteps, 'enrollment-steps')}
             {activeTab === 'admission-notes' && renderDataTable(admissionNotes, 'admission-notes')}
             {activeTab === 'institutional-info' && renderInstitutionalInfoForm()}
+            {activeTab === 'downloads' && renderDataTable(downloads, 'downloads')}
           </div>
         </div>
 

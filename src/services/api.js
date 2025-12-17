@@ -191,9 +191,96 @@ class ApiService {
 
     // Removed admissions important dates public API
 
-    // Get downloads
+    // Get downloads (public)
     async getDownloads() {
         return this.makeRequest('/downloads/');
+    }
+
+    // Admin: Get all downloads (including inactive)
+    async getAdminDownloads() {
+        return this.makeRequest('/admin/downloads/');
+    }
+
+    // Admin: Downloads CRUD
+    async createDownload(formData) {
+        // Use FormData for file uploads
+        const url = `${this.baseURL}/admin/downloads/create/`;
+        const config = {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+        };
+
+        try {
+            const response = await fetch(url, config);
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try { data = await response.json(); } catch (_) { /* ignore */ }
+            }
+
+            if (!response.ok) {
+                const message = (data && (data.message || data.detail || data.error)) || `HTTP error! status: ${response.status}`;
+                const err = new Error(message);
+                err.status = response.status;
+                err.data = data;
+                throw err;
+            }
+
+            return data || await response.json();
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
+        }
+    }
+
+    async updateDownload(downloadId, payload) {
+        // Use FormData for file uploads
+        const url = `${this.baseURL}/admin/downloads/${downloadId}/`;
+        
+        // Add _method field to FormData to indicate it's an update
+        if (payload instanceof FormData) {
+            payload.append('_method', 'PUT');
+        }
+        
+        const config = {
+            method: payload instanceof FormData ? 'POST' : 'PUT',
+            body: payload instanceof FormData ? payload : JSON.stringify(payload),
+            credentials: 'include',
+            headers: payload instanceof FormData ? {
+                'X-HTTP-Method-Override': 'PUT'
+            } : {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const response = await fetch(url, config);
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try { data = await response.json(); } catch (_) { /* ignore */ }
+            }
+
+            if (!response.ok) {
+                const message = (data && (data.message || data.detail || data.error)) || `HTTP error! status: ${response.status}`;
+                const err = new Error(message);
+                err.status = response.status;
+                err.data = data;
+                throw err;
+            }
+
+            return data || await response.json();
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
+        }
+    }
+
+    async deleteDownload(downloadId) {
+        return this.makeRequest(`/admin/downloads/${downloadId}/delete/`, {
+            method: 'DELETE',
+        });
     }
 
     // Submit contact form

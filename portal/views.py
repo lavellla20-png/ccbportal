@@ -18,7 +18,7 @@ from django.conf import settings
 from functools import wraps
 import datetime
 from email.mime.image import MIMEImage
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download
 from .utils import build_safe_media_url, sanitize_input, validate_file_upload
 import os
 
@@ -393,23 +393,61 @@ def api_admissions_info(request):
 
 @require_http_methods(["GET"])
 def api_downloads(request):
-    """Get downloads data"""
-    downloads_data = {
-        'student_forms': [
-            {'name': 'Application Form', 'url': '/downloads/application-form.pdf'},
-            {'name': 'Enrollment Form', 'url': '/downloads/enrollment-form.pdf'},
-            {'name': 'Student Handbook', 'url': '/downloads/student-handbook.pdf'}
-        ],
-        'academic_calendar': [
-            {'name': 'Academic Calendar 2025-2026', 'url': '/downloads/academic-calendar-2025-2026.pdf'},
-            {'name': 'Class Schedule', 'url': '/downloads/class-schedule.pdf'}
-        ],
-        'policies_guidelines': [
-            {'name': 'Student Code of Conduct', 'url': '/downloads/student-code-of-conduct.pdf'},
-            {'name': 'Academic Policies', 'url': '/downloads/academic-policies.pdf'}
-        ]
-    }
-    return JsonResponse(downloads_data)
+    """
+    Public API endpoint to retrieve active downloads grouped by category.
+    
+    Returns only downloads marked as active, organized by their category for easy
+    frontend rendering. This endpoint is used by the public Downloads page to
+    display available files to users.
+    
+    Returns:
+        JSON response with downloads organized by category:
+        {
+            'status': 'success',
+            'downloads': {
+                'category-name': [
+                    {
+                        'id': int,
+                        'title': str,
+                        'description': str,
+                        'file_url': str,
+                        'file_type': str,
+                        'category': str,
+                        'category_display': str
+                    }
+                ]
+            }
+        }
+    """
+    try:
+        downloads = Download.objects.filter(is_active=True).order_by('category', 'display_order', 'title')
+        
+        # Group downloads by category
+        downloads_by_category = {}
+        for download in downloads:
+            category = download.category
+            if category not in downloads_by_category:
+                downloads_by_category[category] = []
+            
+            downloads_by_category[category].append({
+                'id': download.id,
+                'title': download.title,
+                'description': download.description,
+                'file_url': build_safe_media_url(request, download.file) if download.file else None,
+                'file_type': download.file_type or 'FILE',
+                'category': download.category,
+                'category_display': download.get_category_display()
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'downloads': downloads_by_category
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error fetching downloads: {str(e)}'
+        }, status=500)
 
 
 @require_http_methods(["GET"])
@@ -3683,6 +3721,309 @@ def _send_brevo_template(to_email: str, template_id: str, merge_data: dict) -> b
         return True
     except Exception:
         return False
+
+
+# Admin-only CRUD operations for Downloads
+@require_http_methods(["GET"])
+@csrf_exempt
+@login_required_json
+def api_admin_downloads(request):
+    """Get all downloads including inactive ones (Admin only)"""
+    try:
+        downloads = Download.objects.all().order_by('category', 'display_order', 'title')
+        downloads_list = []
+        
+        for download in downloads:
+            downloads_list.append({
+                'id': download.id,
+                'title': download.title,
+                'description': download.description,
+                'category': download.category,
+                'category_display': download.get_category_display(),
+                'file_url': build_safe_media_url(request, download.file) if download.file else None,
+                'file_type': download.file_type or 'FILE',
+                'is_active': download.is_active,
+                'display_order': download.display_order,
+                'created_at': download.created_at.isoformat(),
+                'updated_at': download.updated_at.isoformat()
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'downloads': downloads_list
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error fetching downloads: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+@login_required_json
+def api_create_download(request):
+    """
+    Admin API endpoint to create a new download entry.
+    
+    Accepts multipart/form-data for file uploads. Validates file type and size
+    before saving. Supports common document formats: PDF, DOC, DOCX, XLS, XLSX, ZIP, RAR.
+    Maximum file size: 50MB.
+    
+    Required fields:
+        - title: Display name for the download
+        - file: The file to be uploaded
+    
+    Optional fields:
+        - description: Brief description
+        - category: Download category (default: 'other')
+        - is_active: Whether visible on public site (default: True)
+        - display_order: Ordering within category (default: 0)
+    
+    Returns:
+        JSON response with created download object or error message
+    """
+    try:
+        # Handle multipart/form-data for file upload
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            title = sanitize_input(request.POST.get('title', ''), max_length=200)
+            description = sanitize_input(request.POST.get('description', ''))
+            category = request.POST.get('category', 'other')
+            is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            display_order = int(request.POST.get('display_order', 0))
+            file = request.FILES.get('file')
+            
+            # Validate file upload if provided
+            if file:
+                # Allow common document types for downloads
+                allowed_document_types = [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.ms-word',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/msexcel',
+                    'application/zip',
+                    'application/x-zip-compressed',
+                    'application/x-rar-compressed',
+                    'application/vnd.rar',
+                ]
+                is_valid, error_msg = validate_file_upload(file, allowed_types=allowed_document_types, max_size_mb=50)
+                if not is_valid:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': error_msg
+                    }, status=400)
+        else:
+            # Handle JSON (for backward compatibility, though file won't work)
+            data = json.loads(request.body)
+            title = sanitize_input(data.get('title', ''), max_length=200)
+            description = sanitize_input(data.get('description', ''))
+            category = data.get('category', 'other')
+            is_active = data.get('is_active', True)
+            display_order = data.get('display_order', 0)
+            file = None
+        
+        # Validate required fields
+        if not title:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Field "title" is required'
+            }, status=400)
+        
+        if not file:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'File is required'
+            }, status=400)
+        
+        # Create the download
+        download = Download.objects.create(
+            title=title,
+            description=description,
+            category=category,
+            file=file,
+            is_active=is_active,
+            display_order=display_order
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Download created successfully',
+            'download': {
+                'id': download.id,
+                'title': download.title,
+                'description': download.description,
+                'category': download.category,
+                'category_display': download.get_category_display(),
+                'file_url': build_safe_media_url(request, download.file) if download.file else None,
+                'file_type': download.file_type or 'FILE',
+                'is_active': download.is_active,
+                'display_order': download.display_order
+            }
+        }, status=201)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error creating download: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["PUT", "PATCH", "POST"])
+@csrf_exempt
+@login_required_json
+def api_update_download(request, download_id):
+    """
+    Admin API endpoint to update an existing download entry.
+    
+    Supports both JSON and multipart/form-data requests. When updating with a new file,
+    the old file is automatically deleted. File upload is optional for updates.
+    
+    Parameters:
+        download_id: ID of the download to update
+    
+    Returns:
+        JSON response with updated download object or error message
+    """
+    try:
+        download = get_object_or_404(Download, id=download_id)
+        
+        # Handle multipart/form-data for file upload
+        # Check if this is a POST request with method override (for multipart data)
+        is_post_with_override = (request.method == 'POST' and
+                                (request.META.get('HTTP_X_HTTP_METHOD_OVERRIDE') == 'PUT' or
+                                 request.POST.get('_method') == 'PUT'))
+        
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # For multipart data, use POST (Django parses this correctly)
+            if 'title' in request.POST:
+                download.title = sanitize_input(request.POST.get('title'), max_length=200)
+            if 'description' in request.POST:
+                download.description = sanitize_input(request.POST.get('description'))
+            if 'category' in request.POST:
+                download.category = request.POST.get('category')
+            if 'is_active' in request.POST:
+                download.is_active = request.POST.get('is_active', 'true').lower() == 'true'
+            if 'display_order' in request.POST:
+                download.display_order = int(request.POST.get('display_order', 0))
+            
+            file = request.FILES.get('file') if hasattr(request, 'FILES') else None
+            remove_file = request.POST.get('remove_file', 'false').lower() == 'true'
+            
+            # Handle file
+            if remove_file:
+                if download.file:
+                    download.file.delete()
+                download.file = None
+            elif file:
+                # Validate file upload
+                # Allow common document types for downloads
+                allowed_document_types = [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.ms-word',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/msexcel',
+                    'application/zip',
+                    'application/x-zip-compressed',
+                    'application/x-rar-compressed',
+                    'application/vnd.rar',
+                ]
+                is_valid, error_msg = validate_file_upload(file, allowed_types=allowed_document_types, max_size_mb=50)
+                if not is_valid:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': error_msg
+                    }, status=400)
+                # Delete old file if exists
+                if download.file:
+                    download.file.delete()
+                download.file = file
+        else:
+            # Handle JSON
+            data = json.loads(request.body)
+            
+            # Update fields
+            if 'title' in data:
+                download.title = sanitize_input(data.get('title'), max_length=200)
+            if 'description' in data:
+                download.description = sanitize_input(data.get('description'))
+            if 'category' in data:
+                download.category = data.get('category')
+            if 'is_active' in data:
+                download.is_active = data.get('is_active', True)
+            if 'display_order' in data:
+                download.display_order = data.get('display_order', 0)
+        
+        download.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Download updated successfully',
+            'download': {
+                'id': download.id,
+                'title': download.title,
+                'description': download.description,
+                'category': download.category,
+                'category_display': download.get_category_display(),
+                'file_url': build_safe_media_url(request, download.file) if download.file else None,
+                'file_type': download.file_type or 'FILE',
+                'is_active': download.is_active,
+                'display_order': download.display_order
+            }
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error updating download: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["DELETE"])
+@csrf_exempt
+@login_required_json
+def api_delete_download(request, download_id):
+    """
+    Admin API endpoint to delete a download entry.
+    
+    Permanently removes the download record and its associated file from storage.
+    This action cannot be undone.
+    
+    Parameters:
+        download_id: ID of the download to delete
+    
+    Returns:
+        JSON response with success/error message
+    """
+    try:
+        download = get_object_or_404(Download, id=download_id)
+        # Delete associated file if exists
+        if download.file:
+            download.file.delete()
+        download.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Download deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error deleting download: {str(e)}'
+        }, status=500)
 
 
 def handle_hot_update(request):

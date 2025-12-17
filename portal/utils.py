@@ -83,23 +83,44 @@ def validate_file_upload(file, allowed_types=None, max_size_mb=10):
     if file.size > max_size_bytes:
         return False, f'File size exceeds maximum allowed size of {max_size_mb}MB'
     
-    # Check content type
-    if file.content_type not in allowed_types:
-        return False, f'File type {file.content_type} is not allowed'
-    
-    # Additional validation: check file extension matches content type
+    # Get file extension
     ext = file.name.split('.')[-1].lower() if '.' in file.name else ''
-    ext_to_mime = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'webp': 'image/webp',
-    }
-    if ext in ext_to_mime and ext_to_mime[ext] != file.content_type:
-        return False, 'File extension does not match file content type'
     
-    return True, None
+    # Extension to MIME type mapping (including common variations browsers may send)
+    # This helps handle cases where browsers send different MIME types for the same file
+    ext_to_mime = {
+        # Images
+        'jpg': ['image/jpeg', 'image/jpg'],
+        'jpeg': ['image/jpeg', 'image/jpg'],
+        'png': ['image/png'],
+        'gif': ['image/gif'],
+        'webp': ['image/webp'],
+        # Documents
+        'pdf': ['application/pdf'],
+        'doc': ['application/msword', 'application/vnd.ms-word'],
+        'docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'],
+        'xls': ['application/vnd.ms-excel', 'application/msexcel'],
+        'xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'],
+        'zip': ['application/zip', 'application/x-zip-compressed'],
+        'rar': ['application/x-rar-compressed', 'application/vnd.rar'],
+    }
+    
+    # First, check if content type is directly in allowed_types
+    if file.content_type in allowed_types:
+        return True, None
+    
+    # If content type not directly in allowed_types, check if extension is valid
+    # and if any of the extension's expected MIME types are in allowed_types
+    if ext in ext_to_mime:
+        # Check if any of the expected MIME types for this extension are in allowed_types
+        extension_mime_types = ext_to_mime[ext]
+        if any(mime in allowed_types for mime in extension_mime_types):
+            # The extension is allowed, so accept the file even if content_type is slightly different
+            # (browsers sometimes send variations)
+            return True, None
+    
+    # If we get here, the file type is not allowed
+    return False, f'File type {file.content_type} is not allowed'
 
 
 def build_safe_media_url(request, file_field):
@@ -109,7 +130,7 @@ def build_safe_media_url(request, file_field):
     
     Args:
         request: Django request object
-        file_field: Django ImageField or FileField instance (or model instance with image field)
+        file_field: Django ImageField or FileField instance (or model instance with image/file field)
     
     Returns:
         Absolute URL string or None
@@ -118,11 +139,15 @@ def build_safe_media_url(request, file_field):
         return None
     
     try:
-        # Handle both direct field access and model instance access
+        # Handle direct FileField/ImageField access
         if hasattr(file_field, 'url'):
             url = file_field.url
+        # Handle model instance with image field
         elif hasattr(file_field, 'image') and file_field.image:
             url = file_field.image.url
+        # Handle model instance with file field
+        elif hasattr(file_field, 'file') and file_field.file:
+            url = file_field.file.url
         else:
             return None
         

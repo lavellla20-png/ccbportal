@@ -429,3 +429,76 @@ class InstitutionalInfo(models.Model):
         if self.is_active:
             InstitutionalInfo.objects.exclude(pk=self.pk).filter(is_active=True).update(is_active=False)
         super().save(*args, **kwargs)
+
+
+class Download(models.Model):
+    """
+    Model for downloadable files and documents.
+    
+    This model manages downloadable resources such as forms, policies, manuals, and other documents
+    that can be accessed by users through the Downloads page. Files are organized by category
+    and can be enabled/disabled for public visibility.
+    
+    Attributes:
+        category: The category/type of download (forms, HR policies, syllabi, etc.)
+        title: Display name for the download
+        description: Optional description of the download content
+        file: The actual file to be downloaded (PDF, DOC, DOCX, XLS, XLSX, ZIP, RAR)
+        file_type: Auto-detected file type based on extension
+        is_active: Controls whether the download is visible on the public site
+        display_order: Ordering for display within the same category
+    """
+    
+    CATEGORY_CHOICES = [
+        ('forms-enrollment', 'Forms - Enrollment'),
+        ('forms-clearance', 'Forms - Clearance'),
+        ('forms-request', 'Forms - Request'),
+        ('forms-shift-change', 'Forms - Shift/Change'),
+        ('hr-policies', 'HR Policies'),
+        ('hr-forms', 'HR Forms'),
+        ('syllabi', 'Syllabi'),
+        ('manuals', 'Manuals'),
+        ('handbooks', 'Handbooks'),
+        ('other', 'Other'),
+    ]
+    
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='other', help_text="Download category")
+    title = models.CharField(max_length=200, help_text="Download title/name")
+    description = models.TextField(blank=True, help_text="Brief description of the download")
+    file = models.FileField(upload_to='downloads/', help_text="File to download (PDF, DOC, etc.)")
+    file_type = models.CharField(max_length=50, blank=True, help_text="File type (e.g., PDF, DOCX)")
+    
+    # Metadata
+    is_active = models.BooleanField(default=True, help_text="Whether this download is currently available")
+    display_order = models.PositiveIntegerField(default=0, help_text="Order for display on website")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['category', 'display_order', 'title']
+        verbose_name = 'Download'
+        verbose_name_plural = 'Downloads'
+    
+    def __str__(self):
+        return f"{self.title} ({self.get_category_display()})"
+    
+    def save(self, *args, **kwargs):
+        """
+        Override save method to auto-detect file type from filename extension.
+        This ensures file_type is automatically set when a file is uploaded,
+        improving data consistency and reducing manual input requirements.
+        """
+        # Auto-detect file type from filename if not set
+        if self.file and not self.file_type:
+            filename = self.file.name.lower()
+            if filename.endswith('.pdf'):
+                self.file_type = 'PDF'
+            elif filename.endswith(('.doc', '.docx')):
+                self.file_type = 'DOC'
+            elif filename.endswith(('.xls', '.xlsx')):
+                self.file_type = 'XLS'
+            elif filename.endswith(('.zip', '.rar')):
+                self.file_type = 'ZIP'
+            else:
+                self.file_type = 'FILE'
+        super().save(*args, **kwargs)

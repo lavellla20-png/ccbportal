@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download
 
 # Register your models here.
 admin.site.register(AcademicProgram)
@@ -188,3 +188,21 @@ class InstitutionalInfoAdmin(admin.ModelAdmin):
         if InstitutionalInfo.objects.count() <= 1:
             return False
         return True
+
+@admin.register(Download)
+class DownloadAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'file_type', 'is_active', 'display_order')
+    list_filter = ('category', 'is_active', 'file_type')
+    search_fields = ('title', 'description')
+    ordering = ('category', 'display_order', 'title')
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'description', 'category')
+        }),
+        ('File', {
+            'fields': ('file',)
+        }),
+        ('Display Settings', {
+            'fields': ('is_active', 'display_order')
+        }),
+    )
