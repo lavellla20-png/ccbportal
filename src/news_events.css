@@ -197,11 +197,11 @@ html.modal-open {
 /* Announcements Section */
 .announcements-grid {
   display: grid;
-  /* Match admissions Important Dates grid behavior */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   width: 100%;
   max-width: 100%;
+  justify-content: start;
   opacity: 0;
   transform: translateY(30px);
   transition: all 0.3s ease-out;
@@ -1953,10 +1953,11 @@ html.modal-open {
 /* Achievements Section */
 .achievements-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   width: 100%;
   max-width: 100%;
+  justify-content: start;
   opacity: 0;
   transform: translateY(30px);
   transition: all 0.3s ease-out;
@@ -2837,7 +2838,8 @@ html.modal-open {
   }
   
   .announcements-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: start;
   }
   
   .events-grid,
@@ -2847,7 +2849,8 @@ html.modal-open {
   }
   
   .achievements-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: start;
   }
 }
 
