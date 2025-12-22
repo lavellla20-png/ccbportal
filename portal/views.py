@@ -142,6 +142,15 @@ def api_test(request):
 
 
 @require_http_methods(["GET"])
+def health_check(request):
+    """Simple health check endpoint for Render and other monitoring"""
+    return JsonResponse({
+        'status': 'healthy',
+        'service': 'ccb-portal-backend'
+    }, status=200)
+
+
+@require_http_methods(["GET"])
 def api_academic_programs(request):
     """Get academic programs data from database"""
     try:

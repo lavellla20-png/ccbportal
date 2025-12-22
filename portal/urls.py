@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.ReactAppView.as_view(), name='index'),
     path('api/test/', views.api_test, name='api_test'),
+    path('health/', views.health_check, name='health_check'),
     
     # Public API endpoints
     path('api/academic-programs/', views.api_academic_programs, name='api_academic_programs'),
