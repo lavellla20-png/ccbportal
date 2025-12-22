@@ -107,4 +107,8 @@ urlpatterns = [
     # Handle webpack hot-update requests to suppress 404 errors
     # These files are served by webpack-dev-server (port 3000), not Django
     re_path(r'^.*\.hot-update\.(js|json)$', views.handle_hot_update, name='handle_hot_update'),
+    
+    # Catch-all route for React Router (must be last)
+    # This ensures all non-API routes are handled by React
+    re_path(r'^(?!api/|admin/|static/|media/).*$', views.ReactAppView.as_view(), name='react_app'),
 ] 

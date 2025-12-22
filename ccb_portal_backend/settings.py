@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -100,20 +101,30 @@ WSGI_APPLICATION = 'ccb_portal_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ccb_portal',
-        'USER': 'root',
-        'PASSWORD': '',  # Default XAMPP MySQL has no password
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'sql_mode': 'STRICT_TRANS_TABLES',
-        },
+# Use PostgreSQL on Render, MySQL locally
+DATABASE_URL = get_env_variable('DATABASE_URL', None)
+
+if DATABASE_URL:
+    # Production: Use PostgreSQL from Render
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    # Development: Use MySQL (XAMPP)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': get_env_variable('DB_NAME', 'ccb_portal'),
+            'USER': get_env_variable('DB_USER', 'root'),
+            'PASSWORD': get_env_variable('DB_PASSWORD', ''),
+            'HOST': get_env_variable('DB_HOST', 'localhost'),
+            'PORT': get_env_variable('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'sql_mode': 'STRICT_TRANS_TABLES',
+            },
+        }
+    }
 
 
 # Password validation
@@ -263,4 +274,8 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Database security (already using parameterized queries via Django ORM)
 # Ensure no raw SQL queries without proper sanitization
-DATABASES['default']['OPTIONS']['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'"
+# Only set MySQL-specific options if using MySQL
+if DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+    if 'OPTIONS' not in DATABASES['default']:
+        DATABASES['default']['OPTIONS'] = {}
+    DATABASES['default']['OPTIONS']['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'"
