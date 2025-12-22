@@ -188,14 +188,11 @@ else:
             origin.strip() for origin in cors_origins_env.split(',') 
             if origin.strip() and url_pattern.match(origin.strip())
         ]
-        # If no valid origins found, allow same origin (since Django serves React)
+        # If no valid origins found after filtering, use empty list (same-origin is allowed by default)
         if not CORS_ALLOWED_ORIGINS:
-            CORS_ALLOW_ALL_ORIGINS = False
-            # Allow same origin requests
             CORS_ALLOWED_ORIGINS = []
     else:
-        # Default: allow same origin (Django serves React frontend)
-        CORS_ALLOW_ALL_ORIGINS = False
+        # Default: empty list allows same-origin requests (Django serves React frontend)
         CORS_ALLOWED_ORIGINS = []
     # Additional CORS security settings
     CORS_ALLOW_CREDENTIALS = True
