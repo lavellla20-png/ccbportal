@@ -2417,6 +2417,8 @@ def api_contact_verify(request):
         sub_phone = escape(submission.phone or '')
         sub_subject = escape(submission.subject or 'general')
         sub_message = escape(submission.message or '').replace('\n', '<br/>')
+        # HTML for empty phone placeholder (extracted to avoid f-string backslash issue)
+        phone_display = sub_phone if sub_phone else '<span style="color:#888;">—</span>'
 
         # Plain-text fallback
         text_body = (
@@ -2454,7 +2456,7 @@ def api_contact_verify(request):
                     </tr>
                     <tr>
                       <td style=\"padding:6px 0; color:#555;\"><strong>Phone:</strong></td>
-                      <td style=\"padding:6px 0; color:#111;\">{sub_phone or '<span style=\\"color:#888;\\">—</span>'}</td>
+                      <td style=\"padding:6px 0; color:#111;\">{phone_display}</td>
                     </tr>
                   </table>
                 </div>
