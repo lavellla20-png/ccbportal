@@ -268,8 +268,8 @@ const Downloads = () => {
   }, [loading, downloads]);
 
   return (
-    <div className="App downloads-page">
-      <Navbar />
+    <div className="App downloads-page nav-animations-complete">
+      <Navbar isHomePage={true} />
 
       {/* Downloads Hero Section */}
       <section className="news-hero">

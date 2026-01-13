@@ -3170,3 +3170,1531 @@
     font-size: 0.9rem;
   }
 }
+
+/* Academic Page - Same Navbar Styling as Homepage */
+/* Apply the same navbar styles to academic-page */
+.academic-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure academic page navbar matches homepage styling - No animations, static display */
+.academic-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Academic page navbar - always visible, no animations */
+.academic-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.academic-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.academic-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.academic-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.academic-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.academic-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.academic-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.academic-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.academic-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.academic-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.academic-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.academic-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.academic-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.academic-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.academic-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.academic-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for academic page navbar */
+@media (max-width: 1024px) {
+  .academic-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .academic-page .brand-logo,
+  .academic-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .academic-page .header-top .brand-text h1,
+  .academic-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .academic-page-navbar .brand-logo,
+  .academic-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .academic-page-navbar .header-top .brand-text h1,
+  .academic-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .academic-page-navbar .header-top .brand-tagline,
+  .academic-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .academic-page-navbar .brand-logo,
+  .academic-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .academic-page-navbar .header-top .brand-text h1,
+  .academic-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .academic-page-navbar .header-top .brand-tagline,
+  .academic-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* Admissions Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to admissions-page */
+.admissions-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure admissions page navbar matches homepage styling - No animations, static display */
+.admissions-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Admissions page navbar - always visible, no animations */
+.admissions-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.admissions-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.admissions-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.admissions-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.admissions-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.admissions-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.admissions-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.admissions-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.admissions-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.admissions-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.admissions-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.admissions-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.admissions-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.admissions-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.admissions-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admissions-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for admissions page navbar */
+@media (max-width: 1024px) {
+  .admissions-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .admissions-page .brand-logo,
+  .admissions-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .admissions-page .header-top .brand-text h1,
+  .admissions-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admissions-page-navbar .brand-logo,
+  .admissions-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .admissions-page-navbar .header-top .brand-text h1,
+  .admissions-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .admissions-page-navbar .header-top .brand-tagline,
+  .admissions-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .admissions-page-navbar .brand-logo,
+  .admissions-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .admissions-page-navbar .header-top .brand-text h1,
+  .admissions-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .admissions-page-navbar .header-top .brand-tagline,
+  .admissions-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* News & Events Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to news-events-page */
+.news-events-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure news-events page navbar matches homepage styling - No animations, static display */
+.news-events-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* News-events page navbar - always visible, no animations */
+.news-events-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.news-events-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.news-events-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.news-events-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.news-events-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.news-events-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.news-events-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.news-events-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.news-events-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.news-events-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.news-events-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.news-events-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.news-events-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.news-events-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.news-events-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.news-events-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for news-events page navbar */
+@media (max-width: 1024px) {
+  .news-events-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .news-events-page .brand-logo,
+  .news-events-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .news-events-page .header-top .brand-text h1,
+  .news-events-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .news-events-page-navbar .brand-logo,
+  .news-events-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .news-events-page-navbar .header-top .brand-text h1,
+  .news-events-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .news-events-page-navbar .header-top .brand-tagline,
+  .news-events-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-events-page-navbar .brand-logo,
+  .news-events-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .news-events-page-navbar .header-top .brand-text h1,
+  .news-events-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .news-events-page-navbar .header-top .brand-tagline,
+  .news-events-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* Downloads Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to downloads-page */
+.downloads-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure downloads page navbar matches homepage styling - No animations, static display */
+.downloads-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Downloads page navbar - always visible, no animations */
+.downloads-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.downloads-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.downloads-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.downloads-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.downloads-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.downloads-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.downloads-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.downloads-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.downloads-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.downloads-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.downloads-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.downloads-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.downloads-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.downloads-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.downloads-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.downloads-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for downloads page navbar */
+@media (max-width: 1024px) {
+  .downloads-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .downloads-page .brand-logo,
+  .downloads-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .downloads-page .header-top .brand-text h1,
+  .downloads-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .downloads-page-navbar .brand-logo,
+  .downloads-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .downloads-page-navbar .header-top .brand-text h1,
+  .downloads-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .downloads-page-navbar .header-top .brand-tagline,
+  .downloads-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .downloads-page-navbar .brand-logo,
+  .downloads-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .downloads-page-navbar .header-top .brand-text h1,
+  .downloads-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .downloads-page-navbar .header-top .brand-tagline,
+  .downloads-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* Students Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to students-page */
+.students-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure students page navbar matches homepage styling - No animations, static display */
+.students-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Students page navbar - always visible, no animations */
+.students-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.students-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.students-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.students-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.students-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.students-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.students-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.students-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.students-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.students-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.students-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.students-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.students-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.students-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.students-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.students-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for students page navbar */
+@media (max-width: 1024px) {
+  .students-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .students-page .brand-logo,
+  .students-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .students-page .header-top .brand-text h1,
+  .students-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .students-page-navbar .brand-logo,
+  .students-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .students-page-navbar .header-top .brand-text h1,
+  .students-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .students-page-navbar .header-top .brand-tagline,
+  .students-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .students-page-navbar .brand-logo,
+  .students-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .students-page-navbar .header-top .brand-text h1,
+  .students-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .students-page-navbar .header-top .brand-tagline,
+  .students-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* Faculty & Staff Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to faculty-staff-page */
+.faculty-staff-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure faculty-staff page navbar matches homepage styling - No animations, static display */
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Faculty-staff page navbar - always visible, no animations */
+.faculty-staff-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.faculty-staff-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.faculty-staff-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.faculty-staff-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.faculty-staff-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.faculty-staff-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.faculty-staff-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.faculty-staff-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.faculty-staff-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.faculty-staff-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.faculty-staff-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.faculty-staff-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for faculty-staff page navbar */
+@media (max-width: 1024px) {
+  .faculty-staff-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .faculty-staff-page .brand-logo,
+  .faculty-staff-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .faculty-staff-page .header-top .brand-text h1,
+  .faculty-staff-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .faculty-staff-page-navbar .brand-logo,
+  .faculty-staff-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .faculty-staff-page-navbar .header-top .brand-text h1,
+  .faculty-staff-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .faculty-staff-page-navbar .header-top .brand-tagline,
+  .faculty-staff-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-staff-page-navbar .brand-logo,
+  .faculty-staff-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .faculty-staff-page-navbar .header-top .brand-text h1,
+  .faculty-staff-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .faculty-staff-page-navbar .header-top .brand-tagline,
+  .faculty-staff-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* About Us Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to aboutus-page */
+.aboutus-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure aboutus page navbar matches homepage styling - No animations, static display */
+.aboutus-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Aboutus page navbar - always visible, no animations */
+.aboutus-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.aboutus-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.aboutus-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.aboutus-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.aboutus-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.aboutus-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.aboutus-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.aboutus-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.aboutus-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.aboutus-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.aboutus-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.aboutus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.aboutus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.aboutus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.aboutus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.aboutus-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for aboutus page navbar */
+@media (max-width: 1024px) {
+  .aboutus-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .aboutus-page .brand-logo,
+  .aboutus-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .aboutus-page .header-top .brand-text h1,
+  .aboutus-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .aboutus-page-navbar .brand-logo,
+  .aboutus-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .aboutus-page-navbar .header-top .brand-text h1,
+  .aboutus-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .aboutus-page-navbar .header-top .brand-tagline,
+  .aboutus-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .aboutus-page-navbar .brand-logo,
+  .aboutus-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .aboutus-page-navbar .header-top .brand-text h1,
+  .aboutus-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .aboutus-page-navbar .header-top .brand-tagline,
+  .aboutus-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}
+
+/* Contact Us Page - Same Navbar Styling as Homepage (No Animations) */
+/* Apply the same navbar styles to contactus-page */
+.contactus-page .nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 50px;
+}
+
+/* Ensure contactus page navbar matches homepage styling - No animations, static display */
+.contactus-page .main-nav.with-bg.homepage-nav-section {
+  background-color: #2d5a2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Contactus page navbar - always visible, no animations */
+.contactus-page .secondary-nav-bar.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.contactus-page .secondary-nav-bar.homepage-nav-section .secondary-nav-container {
+  opacity: 1;
+}
+
+.contactus-page .secondary-nav-bar.homepage-nav-section .secondary-nav-links .top-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.contactus-page .secondary-nav-bar.homepage-nav-section .date-display {
+  opacity: 1;
+}
+
+.contactus-page .header-top.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.contactus-page .header-top.homepage-nav-section .header-container {
+  opacity: 1;
+}
+
+.contactus-page .header-top.homepage-nav-section .brand-logo {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.contactus-page .header-top.homepage-nav-section .brand-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.contactus-page .header-top.homepage-nav-section .brand-text h1 {
+  opacity: 1;
+}
+
+.contactus-page .header-top.homepage-nav-section .brand-tagline {
+  opacity: 1;
+}
+
+.contactus-page .header-top.homepage-nav-section .header-date-display {
+  opacity: 1;
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .nav-container {
+  opacity: 1;
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .mobile-menu-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .mobile-menu-overlay {
+  opacity: 1;
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .mobile-secondary-nav .nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/"],
+.contactus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/academics"],
+.contactus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/admissions"],
+.contactus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/news"],
+.contactus-page .main-nav.with-bg.homepage-nav-section .nav-links > a[href="/downloads"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .services-nav-link {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .services-dropdown-container .dropdown-arrow {
+  opacity: 1;
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .services-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.contactus-page .main-nav.with-bg.homepage-nav-section .services-dropdown .dropdown-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile responsive for contactus page navbar */
+@media (max-width: 1024px) {
+  .contactus-page-navbar {
+    margin-top: 0 !important;
+  }
+  
+  .contactus-page .brand-logo,
+  .contactus-page-navbar .brand-logo {
+    width: 55px;
+    height: 55px;
+  }
+
+  .contactus-page .header-top .brand-text h1,
+  .contactus-page-navbar .header-top .brand-text h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contactus-page-navbar .brand-logo,
+  .contactus-page .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .contactus-page-navbar .header-top .brand-text h1,
+  .contactus-page .header-top .brand-text h1 {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .contactus-page-navbar .header-top .brand-tagline,
+  .contactus-page .header-top .brand-tagline {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .contactus-page-navbar .brand-logo,
+  .contactus-page .brand-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .contactus-page-navbar .header-top .brand-text h1,
+  .contactus-page .header-top .brand-text h1 {
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .contactus-page-navbar .header-top .brand-tagline,
+  .contactus-page .header-top .brand-tagline {
+    font-size: 0.7rem;
+    margin-top: 0.01rem;
+    line-height: 1.1;
+  }
+}

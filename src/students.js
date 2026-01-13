@@ -276,8 +276,8 @@ const Students = () => {
   };
 
   return (
-    <div className="App students-page">
-      <Navbar isTopBarVisible={isTopBarVisible} />
+    <div className="App students-page nav-animations-complete">
+      <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Students Page Header */}
       <section className="students-header">

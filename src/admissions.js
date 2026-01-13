@@ -182,8 +182,8 @@ const Admissions = () => {
   }, []);
 
   return (
-    <div className="App admissions-page">
-      <Navbar isTopBarVisible={isTopBarVisible} />
+    <div className="App admissions-page nav-animations-complete">
+      <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Admissions Hero Section */}
       <section className={`news-hero ${!isTopBarVisible ? 'navbar-collapsed' : ''}`}>

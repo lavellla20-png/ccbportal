@@ -797,8 +797,8 @@ const NewsEvents = () => {
   const pagedAchievements = achievements.slice((achievementsPage - 1) * itemsPerPage, achievementsPage * itemsPerPage);
 
   return (
-    <div className="App news-events-page">
-      <Navbar isTopBarVisible={isTopBarVisible} />
+    <div className="App news-events-page nav-animations-complete">
+      <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* News & Events Hero Section */}
       <section className={`news-hero ${!isTopBarVisible ? 'navbar-collapsed' : ''}`}>

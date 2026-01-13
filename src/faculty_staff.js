@@ -156,8 +156,8 @@ const FacultyStaff = () => {
   }, []);
 
   return (
-    <div className="App faculty-staff-page">
-      <Navbar isTopBarVisible={isTopBarVisible} />
+    <div className="App faculty-staff-page nav-animations-complete">
+      <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Faculty & Staff Page Header */}
       <section className="faculty-staff-header">

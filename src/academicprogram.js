@@ -87,8 +87,8 @@ const AcademicPrograms = () => {
   }, [programs]); // Re-run when programs are loaded
 
   return (
-    <div className="App academic-page">
-      <Navbar isTopBarVisible={isTopBarVisible} />
+    <div className="App academic-page nav-animations-complete">
+      <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Academic Programs Hero Section */}
       <section className={`news-hero ${!isTopBarVisible ? 'navbar-collapsed' : ''}`}>

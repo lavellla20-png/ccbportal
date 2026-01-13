@@ -97,9 +97,9 @@ const ContactUs = () => {
   }, []);
 
   return (
-    <div className="App contactus-page">
+    <div className="App contactus-page nav-animations-complete">
       <ScrollToTop />
-      <Navbar />
+      <Navbar isHomePage={true} />
       {/* Hero Section */}
       <section className="contact-hero">
         <div className="hero-overlay"></div>

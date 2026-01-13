@@ -301,8 +301,8 @@ const AboutUs = () => {
   };
 
   return (
-    <div className="App aboutus-page">
-      <Navbar isTopBarVisible={isTopBarVisible} />
+    <div className="App aboutus-page nav-animations-complete">
+      <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* About Us Hero Section */}
       <section className={`about-hero ${!isTopBarVisible ? 'navbar-collapsed' : ''}`}>
