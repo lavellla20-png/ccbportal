@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import './academicprogram.css';
 
@@ -88,6 +89,12 @@ const AcademicPrograms = () => {
 
   return (
     <div className="App academic-page nav-animations-complete">
+      <SEO
+        title="Academic Programs"
+        description="Explore our comprehensive academic programs at City College of Bayawan. Discover degree programs in Business Administration, Information Technology, Education, and Hospitality Management with detailed course information and career prospects."
+        keywords="academic programs, degree programs, college courses, Business Administration, Information Technology, Education, Hospitality Management, City College of Bayawan programs"
+        url="/academics"
+      />
       <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Academic Programs Hero Section */}

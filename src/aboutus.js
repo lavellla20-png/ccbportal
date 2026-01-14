@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import './aboutus.css';
 
@@ -302,6 +303,12 @@ const AboutUs = () => {
 
   return (
     <div className="App aboutus-page nav-animations-complete">
+      <SEO
+        title="About Us"
+        description="Learn about City College of Bayawan - our history, mission, vision, core values, organizational structure, administrative officers, and campus facilities. Honor and Excellence for the Highest Good."
+        keywords="about City College of Bayawan, CCB history, mission vision, organizational chart, administrative officers, campus facilities, Bayawan City college"
+        url="/about"
+      />
       <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* About Us Hero Section */}

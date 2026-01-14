@@ -502,3 +502,37 @@ class Download(models.Model):
             else:
                 self.file_type = 'FILE'
         super().save(*args, **kwargs)
+
+
+class ChatbotSession(models.Model):
+    """Track chatbot conversation sessions"""
+    session_id = models.CharField(max_length=255, unique=True, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now=True)
+    message_count = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['-last_activity']
+        verbose_name = 'Chatbot Session'
+        verbose_name_plural = 'Chatbot Sessions'
+    
+    def __str__(self):
+        return f"Session {self.session_id} ({self.message_count} messages)"
+
+
+class ChatbotMessage(models.Model):
+    """Store chatbot conversation messages"""
+    session = models.ForeignKey(ChatbotSession, on_delete=models.CASCADE, related_name='messages')
+    user_message = models.TextField()
+    bot_response = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Chatbot Message'
+        verbose_name_plural = 'Chatbot Messages'
+    
+    def __str__(self):
+        return f"Message from {self.session.session_id} at {self.created_at}"

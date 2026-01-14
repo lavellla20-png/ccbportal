@@ -32,7 +32,7 @@ const Footer = () => {
           <div className="footer-section">
             <h4>Follow Us</h4>
             <a href="https://www.facebook.com/profile.php?id=61574582660823">
-              <img src="/images/fblogo.png" alt="Facebook" className="social-icon" onError={(e) => { e.target.style.display = 'none'; }} /> City College of Bayawan Facebook Page
+              <img src="/images/fblogo.png" alt="Facebook" className="social-icon" loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} /> City College of Bayawan
             </a>
           </div>
           <div className="footer-section">

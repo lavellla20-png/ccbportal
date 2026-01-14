@@ -3,6 +3,7 @@ import "./HomePage.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/footer";
 import ScrollToTop from "./components/ScrollToTop";
+import SEO from "./components/SEO";
 import apiService from "./services/api";
 import audioManager from "./services/audioManager";
 import { normalizeImageUrl } from "./utils/imageUtils";
@@ -427,6 +428,12 @@ const HomePage = () => {
 
   return (
     <div className={`homepage ${navAnimationsComplete ? "nav-animations-complete" : ""}`}>
+      <SEO
+        title="City College of Bayawan"
+        description="City College of Bayawan - Honor and Excellence for the Highest Good. Quality higher education in Bayawan City, Negros Oriental. Explore academic programs, admissions, news, and campus life."
+        keywords="City College of Bayawan, CCB, Bayawan City, Negros Oriental, Higher Education, College, University, Academic Programs, Admissions, Student Portal"
+        url="/"
+      />
       {/* Festive snow overlay for December */}
       {isDecember && (
         <div className="snow-container" aria-hidden="true">
@@ -1171,7 +1178,8 @@ const HomePage = () => {
                             <div className="news-image-wrapper">
                               {news.image ? (
                                 <img 
-                                  src={normalizeImageUrl(news.image)} 
+                                  src={normalizeImageUrl(news.image)}
+                                  loading="lazy" 
                                   alt={news.title}
                                   style={{
                                     width: '100%',

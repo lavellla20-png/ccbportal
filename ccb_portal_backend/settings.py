@@ -199,7 +199,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Email settings via Anymail (Brevo)
 # Security: Use environment variables for sensitive credentials
-BREVO_API_KEY = get_env_variable("BREVO_API_KEY", "")
+# Note: User requested to set the BREVO API key directly here.
+BREVO_API_KEY = get_env_variable(
+    "BREVO_API_KEY",
+    "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"
+)
 EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend" if BREVO_API_KEY else "django.core.mail.backends.console.EmailBackend"
 
 if BREVO_API_KEY:
@@ -214,6 +218,10 @@ if BREVO_API_KEY:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
         ANYMAIL = {}
 
+# OpenAI API Key for Chatbot
+# Set OPENAI_API_KEY environment variable or it will fallback to empty (chatbot will use rule-based responses)
+OPENAI_API_KEY = get_env_variable("OPENAI_API_KEY", "")
+
 # Fallback SMTP (optional) if Anymail not configured
 if not BREVO_API_KEY:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -221,7 +229,7 @@ if not BREVO_API_KEY:
     EMAIL_PORT = int(get_env_variable("EMAIL_PORT", "587"))
     EMAIL_USE_TLS = get_env_variable("EMAIL_USE_TLS", "True").lower() == "true"
     EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER", "")
-    EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "")
+    EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "abcdefghijklmnopqrstuvwxyz")
 
 DEFAULT_FROM_EMAIL = get_env_variable("DEFAULT_FROM_EMAIL", "citycollegeofbayawan@gmail.com")
 SERVER_EMAIL = get_env_variable("SERVER_EMAIL", DEFAULT_FROM_EMAIL)

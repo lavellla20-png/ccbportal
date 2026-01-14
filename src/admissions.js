@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import './admissions.css';
 
@@ -183,6 +184,12 @@ const Admissions = () => {
 
   return (
     <div className="App admissions-page nav-animations-complete">
+      <SEO
+        title="Admissions"
+        description="Begin your journey at City College of Bayawan. Find complete admission requirements, enrollment process steps, and important dates for new and continuing students. Apply now for quality education."
+        keywords="admissions, enrollment, application, requirements, City College of Bayawan admission, how to apply, college admission process"
+        url="/admissions"
+      />
       <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Admissions Hero Section */}

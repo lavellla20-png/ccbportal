@@ -1,0 +1,136 @@
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.error-boundary-content {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 32px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.error-icon {
+  color: #dc3545;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.error-title {
+  color: #2d5a2d;
+  font-size: 2rem;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.error-message {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.error-details {
+  text-align: left;
+  margin: 24px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.error-details summary {
+  cursor: pointer;
+  color: #2d5a2d;
+  font-weight: 600;
+  margin-bottom: 12px;
+  user-select: none;
+}
+
+.error-details summary:hover {
+  color: #1e3e1e;
+}
+
+.error-stack {
+  background: #fff;
+  padding: 16px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  color: #dc3545;
+  margin-top: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.error-btn-primary {
+  background: #2d5a2d;
+  color: white;
+}
+
+.error-btn-primary:hover {
+  background: #1e3e1e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.3);
+}
+
+.error-btn-secondary {
+  background: #f8f9fa;
+  color: #2d5a2d;
+  border: 2px solid #2d5a2d;
+}
+
+.error-btn-secondary:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 90, 45, 0.2);
+}
+
+@media (max-width: 768px) {
+  .error-boundary-content {
+    padding: 32px 24px;
+  }
+
+  .error-title {
+    font-size: 1.5rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-btn {
+    width: 100%;
+  }
+}
+

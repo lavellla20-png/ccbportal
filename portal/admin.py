@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download, ChatbotSession, ChatbotMessage
 
 # Register your models here.
 admin.site.register(AcademicProgram)
@@ -188,6 +188,32 @@ class InstitutionalInfoAdmin(admin.ModelAdmin):
         if InstitutionalInfo.objects.count() <= 1:
             return False
         return True
+
+@admin.register(ChatbotSession)
+class ChatbotSessionAdmin(admin.ModelAdmin):
+    list_display = ('session_id', 'ip_address', 'message_count', 'created_at', 'last_activity')
+    list_filter = ('created_at', 'last_activity')
+    search_fields = ('session_id', 'ip_address')
+    readonly_fields = ('session_id', 'created_at', 'last_activity')
+    ordering = ('-last_activity',)
+
+
+@admin.register(ChatbotMessage)
+class ChatbotMessageAdmin(admin.ModelAdmin):
+    list_display = ('session', 'user_message_preview', 'bot_response_preview', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('user_message', 'bot_response', 'session__session_id')
+    readonly_fields = ('session', 'created_at')
+    ordering = ('-created_at',)
+    
+    def user_message_preview(self, obj):
+        return obj.user_message[:50] + '...' if len(obj.user_message) > 50 else obj.user_message
+    user_message_preview.short_description = 'User Message'
+    
+    def bot_response_preview(self, obj):
+        return obj.bot_response[:50] + '...' if len(obj.bot_response) > 50 else obj.bot_response
+    bot_response_preview.short_description = 'Bot Response'
+
 
 @admin.register(Download)
 class DownloadAdmin(admin.ModelAdmin):

@@ -210,7 +210,7 @@ const CCBlogo = () => {
               {/* Profile Card */}
               <div className={`profile-card ${isProfileCardVisible ? 'fade-in-visible' : ''}`}>
                 <div className="profile-image">
-                  <img src="/images/ccb-logo.png" alt="CCB President" className="profile-photo" />
+                  <img src="/images/ccb-logo.png" alt="CCB President" className="profile-photo" loading="lazy" />
                 </div>
                 <div className="profile-info">
                   <h3>Dr. [President Name]</h3>

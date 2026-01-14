@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import './faculty_staff.css';
 
@@ -157,6 +158,12 @@ const FacultyStaff = () => {
 
   return (
     <div className="App faculty-staff-page nav-animations-complete">
+      <SEO
+        title="Faculty & Staff Portal"
+        description="Resources and information for faculty and administrative staff at City College of Bayawan. Access department directory, teaching resources, administrative systems, and support services."
+        keywords="faculty portal, staff portal, faculty resources, teaching resources, administrative systems, department directory, City College of Bayawan faculty"
+        url="/faculty"
+      />
       <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Faculty & Staff Page Header */}

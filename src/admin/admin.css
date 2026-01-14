@@ -1772,7 +1772,7 @@
 /* CRUD Alert System Styles */
 .admin-page .alert-container {
   position: fixed;
-  top: 20px;
+  top: 50px;
   right: 20px;
   z-index: 2000;
   display: flex;

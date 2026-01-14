@@ -600,6 +600,14 @@ class ApiService {
             body: JSON.stringify(payload),
         });
     }
+
+    // Chatbot endpoint
+    async sendChatbotMessage(message, sessionId = '') {
+        return this.makeRequest('/chatbot/', {
+            method: 'POST',
+            body: JSON.stringify({ message, session_id: sessionId }),
+        });
+    }
 }
 
 // Create and export a singleton instance

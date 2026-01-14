@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import './downloads.css';
 
@@ -269,6 +270,12 @@ const Downloads = () => {
 
   return (
     <div className="App downloads-page nav-animations-complete">
+      <SEO
+        title="Downloads"
+        description="Download essential forms, documents, policies, syllabi, manuals, and handbooks from City College of Bayawan. Access enrollment forms, clearance documents, HR policies, and academic resources."
+        keywords="downloads, forms, documents, enrollment forms, clearance forms, HR policies, syllabi, manuals, handbooks, City College of Bayawan downloads"
+        url="/downloads"
+      />
       <Navbar isHomePage={true} />
 
       {/* Downloads Hero Section */}

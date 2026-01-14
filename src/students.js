@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import './students.css';
 
@@ -277,6 +278,12 @@ const Students = () => {
 
   return (
     <div className="App students-page nav-animations-complete">
+      <SEO
+        title="Student Portal"
+        description="Access essential student resources at City College of Bayawan. Find student handbooks, academic calendars, student services, campus life information, and student organizations."
+        keywords="student portal, student resources, student handbook, academic calendar, student services, campus life, student organizations, City College of Bayawan students"
+        url="/students"
+      />
       <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* Students Page Header */}

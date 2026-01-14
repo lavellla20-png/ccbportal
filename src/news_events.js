@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
+import SEO from './components/SEO';
 import apiService from './services/api';
 import { normalizeImageUrl } from './utils/imageUtils';
 import './news_events.css';
@@ -798,6 +799,12 @@ const NewsEvents = () => {
 
   return (
     <div className="App news-events-page nav-animations-complete">
+      <SEO
+        title="News & Events"
+        description="Stay updated with the latest news, events, announcements, and achievements at City College of Bayawan. Discover campus activities, important updates, and student accomplishments."
+        keywords="City College of Bayawan news, CCB events, campus announcements, student achievements, Bayawan City college news"
+        url="/news"
+      />
       <Navbar isTopBarVisible={isTopBarVisible} isHomePage={true} />
       
       {/* News & Events Hero Section */}
@@ -1030,7 +1037,7 @@ const NewsEvents = () => {
                           <div key={event.id} className="event-item">
                             {event.image ? (
                               <div className="event-image-wrapper">
-                                <img src={normalizeImageUrl(event.image)} alt={event.title} />
+                                <img src={normalizeImageUrl(event.image)} alt={event.title} loading="lazy" />
                                 <div className="event-date-overlay">
                                   <div className="event-date">
                                     <span className="day">{formatEventDate(event.event_date).day}</span>
@@ -1082,7 +1089,7 @@ const NewsEvents = () => {
                           <div key={item.id} className="news-item">
                             {item.image ? (
                               <div className="news-image-wrapper">
-                                <img src={normalizeImageUrl(item.image)} alt={item.title} />
+                                <img src={normalizeImageUrl(item.image)} alt={item.title} loading="lazy" />
                               </div>
                             ) : (
                               <div className="news-image-placeholder">
@@ -1121,7 +1128,7 @@ const NewsEvents = () => {
                           <div key={item.id} className="announcement-item">
                             {item.image ? (
                               <div className="announcement-image-wrapper">
-                                <img src={normalizeImageUrl(item.image)} alt={item.title} />
+                                <img src={normalizeImageUrl(item.image)} alt={item.title} loading="lazy" />
                               </div>
                             ) : (
                               <div className="announcement-image-placeholder">
@@ -1160,7 +1167,7 @@ const NewsEvents = () => {
                           <div key={achievement.id} className={`achievement-item ${achievement.image ? 'has-image' : ''}`}>
                             {achievement.image ? (
                               <div className="achievement-image-wrapper">
-                                <img src={normalizeImageUrl(achievement.image)} alt={achievement.title} />
+                                <img src={normalizeImageUrl(achievement.image)} alt={achievement.title} loading="lazy" />
                               </div>
                             ) : (
                               <div className="achievement-image-placeholder">

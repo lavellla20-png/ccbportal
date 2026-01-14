@@ -18,9 +18,11 @@ from django.conf import settings
 from functools import wraps
 import datetime
 from email.mime.image import MIMEImage
-from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download
+from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download, ChatbotSession, ChatbotMessage
 from .utils import build_safe_media_url, sanitize_input, validate_file_upload
+# from .chatbot_utils import retrieve_relevant_content, get_recent_content_summary, parse_date_from_query
 import os
+import uuid
 
 
 def login_required_json(view_func):
@@ -4233,6 +4235,530 @@ def api_delete_download(request, download_id):
         return JsonResponse({
             'status': 'error',
             'message': f'Error deleting download: {str(e)}'
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_chatbot(request):
+    """
+    RAG-based chatbot endpoint using Retrieval-Augmented Generation.
+    Provides structured website content from database to AI, not page crawling.
+    """
+    try:
+        data = json.loads(request.body)
+        user_message = data.get('message', '').strip()
+        session_id = data.get('session_id', '')
+        
+        if not user_message:
+            return JsonResponse({
+                'status': 'error',
+                'message': "Please send a message. I'm here to help!",
+                'reply': "Please send a message. I'm here to help!"
+            }, status=400)
+        
+        # Get or create session
+        from portal.security import get_client_ip
+        if not session_id:
+            session_id = str(uuid.uuid4())
+        
+        ip_address = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        
+        session, created = ChatbotSession.objects.get_or_create(
+            session_id=session_id,
+            defaults={
+                'ip_address': ip_address,
+                'user_agent': user_agent[:500] if user_agent else '',
+            }
+        )
+        
+        if not created:
+            session.message_count += 1
+            session.save(update_fields=['last_activity', 'message_count'])
+        
+        # Retrieve relevant content from database
+        context_content = retrieve_relevant_content(user_message)
+        recent_content = get_recent_content_summary()
+        target_date = parse_date_from_query(user_message)
+        
+        # Get conversation history for context
+        recent_messages = ChatbotMessage.objects.filter(session=session).order_by('-created_at')[:5]
+        conversation_history = ""
+        if recent_messages.exists():
+            conversation_history = "\n\nRecent conversation:\n"
+            for msg in reversed(recent_messages):  # Oldest first
+                conversation_history += f"User: {msg.user_message}\n"
+                conversation_history += f"Assistant: {msg.bot_response}\n\n"
+        
+        # Build system prompt with website content (RAG-based)
+        system_prompt = """You are an AI assistant for the official website of City College of Bayawan.
+
+Your role:
+- Answer user questions ONLY using the provided website content context.
+- Treat the database content as the single source of truth.
+- Do NOT invent information.
+- If the requested information is not found in the context, say:
+  "That information is not currently available on the City College of Bayawan website."
+
+You understand the website structure:
+- Homepage
+- Academics (programs, departments)
+- Admissions (requirements, enrollment process, year levels)
+- News & Events (news, announcements, events, achievements)
+- Downloads (forms, policies)
+- Students (guides, activities)
+- Faculty & Staff
+- About Us (mission, vision, history)
+- Contact Us
+
+Behavior rules:
+- If the user asks for "latest", prioritize newest dates.
+- If the user asks for "oldest", prioritize earliest dates.
+- If the user asks for a specific year level (1st year, 2nd year, etc.), answer only for that level.
+- If links are available, include them in markdown format: [Title](URL)
+- Be concise, professional, and helpful.
+
+WEBSITE CONTENT CONTEXT:
+{context}""".format(context=context_content)
+        
+        # Try to use OpenAI if API key is available
+        openai_api_key = getattr(settings, 'OPENAI_API_KEY', '')
+        response_text = None
+        
+        if openai_api_key:
+            try:
+                from openai import OpenAI
+                client = OpenAI(api_key=openai_api_key)
+                
+                messages = [
+                    {"role": "system", "content": system_prompt}
+                ]
+                
+                # Add conversation history (only last 4 messages to avoid token limits)
+                if recent_messages.exists():
+                    for msg in list(recent_messages)[:4]:  # Limit to last 4 exchanges
+                        messages.append({"role": "user", "content": msg.user_message})
+                        messages.append({"role": "assistant", "content": msg.bot_response})
+                
+                # Add current user message
+                messages.append({"role": "user", "content": user_message})
+                
+                # Call OpenAI API
+                completion = client.chat.completions.create(
+                    model="gpt-4",  # Using GPT-4 for better understanding and response quality
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                
+                response_text = completion.choices[0].message.content.strip()
+                
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f'OpenAI API error: {str(e)}', exc_info=True)
+                # Fall through to rule-based response
+        
+        # Fallback to rule-based responses if OpenAI is not available or fails
+        if not response_text:
+            user_message_lower = user_message.lower()
+            
+            # More human-like rule-based responses
+            if any(word in user_message_lower for word in ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening']):
+                response_text = "Hi there! I'm here to help you with anything about City College of Bayawan. What would you like to know?"
+            elif any(word in user_message_lower for word in ['thank', 'thanks']):
+                response_text = "You're welcome! Feel free to ask if you need anything else."
+            elif any(word in user_message_lower for word in ['bye', 'goodbye']):
+                response_text = "Goodbye! Take care and feel free to come back if you have more questions!"
+            elif any(word in user_message_lower for word in [
+                'latest', 'recent', 'new',
+                'news', 'event', 'events',
+                'announcement', 'announcements',
+                'achievement', 'achievements', 'award', 'awards'
+            ]):
+                # Determine what content type the user wants
+                wants_news = any(word in user_message_lower for word in ['news', 'article', 'story'])
+                wants_announcements = any(word in user_message_lower for word in ['announcement', 'announce', 'notice'])
+                wants_events = any(word in user_message_lower for word in ['event', 'events', 'upcoming', 'schedule'])
+                wants_achievements = any(word in user_message_lower for word in ['achievement', 'achievements', 'award', 'awards'])
+                
+                # Provide recent content directly based on user intent
+                if recent_content and len(recent_content.strip()) > 50:
+                    # Format the recent content in a human-friendly way
+                    lines = recent_content.split('\n')
+                    response_parts = []
+                    current_section = None
+                    items_added = 0
+                    max_items = 5  # Display up to 5 items (at least 3 for achievements)
+                    section_found = False
+                    in_target_section = False
+                    
+                    # Determine target section based on user intent
+                    target_section = None
+                    if wants_news:
+                        target_section = "Latest News"
+                    elif wants_events:
+                        # We will treat both upcoming and latest events as the same intent
+                        target_section = "Upcoming Events"
+                    elif wants_announcements:
+                        target_section = "Recent Announcements"
+                    elif wants_achievements:
+                        target_section = "Latest Achievements"
+                    
+                    for line in lines:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        
+                        # Check if this line is a section header
+                        if 'Latest News:' in line:
+                            current_section = "Latest News"
+                            in_target_section = (target_section is None or current_section == target_section)
+                            if in_target_section:
+                                section_found = True
+                                if items_added < max_items:
+                                    response_parts.append(f"\n{current_section}:")
+                        elif 'Upcoming Events:' in line or 'Latest Events:' in line:
+                            # Handle both "Upcoming Events" and "Latest Events" (when no upcoming)
+                            current_section = "Upcoming Events" if 'Upcoming Events:' in line else "Latest Events"
+                            in_target_section = (target_section is None or current_section == "Upcoming Events" or current_section == "Latest Events")
+                            if in_target_section and (target_section is None or target_section in ["Upcoming Events", "Latest Events"]):
+                                section_found = True
+                                if items_added < max_items:
+                                    response_parts.append(f"\n{current_section}:")
+                        elif 'Recent Announcements:' in line:
+                            current_section = "Recent Announcements"
+                            in_target_section = (target_section is None or current_section == target_section)
+                            if in_target_section:
+                                section_found = True
+                                if items_added < max_items:
+                                    response_parts.append(f"\n{current_section}:")
+                        elif 'Latest Achievements:' in line:
+                            current_section = "Latest Achievements"
+                            in_target_section = (target_section is None or current_section == target_section)
+                            if in_target_section:
+                                section_found = True
+                                if items_added < max_items:
+                                    response_parts.append(f"\n{current_section}:")
+                        elif line.startswith('-') and items_added < max_items and in_target_section:
+                            # Only process items from the target section
+                            if '| Link:' in line:
+                                parts = line.split('| Link:')
+                                title_part = parts[0].replace('-', '').strip()
+                                link = parts[1].strip()
+                                # Extract just the title (before date)
+                                title = title_part.split('(')[0].strip()
+                                response_parts.append(f"• {title} - [View details]({link})")
+                                items_added += 1
+                    
+                    if response_parts and items_added > 0:
+                        if wants_news:
+                            response_text = "Here's the latest news:\n" + "\n".join(response_parts)
+                        elif wants_events:
+                            response_text = "Here are the events:\n" + "\n".join(response_parts)
+                        elif wants_announcements:
+                            response_text = "Here are the recent announcements:\n" + "\n".join(response_parts)
+                        elif wants_achievements:
+                            response_text = "Here are the latest achievements:\n" + "\n".join(response_parts)
+                        else:
+                            response_text = "Here's what's happening recently:\n" + "\n".join(response_parts)
+                        if items_added >= max_items:
+                            response_text += "\n\nCheck out our News & Events page for more!"
+                    elif section_found and items_added == 0:
+                        if wants_news:
+                            response_text = "I don't have any news articles available right now. Please check our News & Events page for the latest news!"
+                        elif wants_events:
+                            response_text = "I don't have any events available right now. Please check our News & Events page for events!"
+                        elif wants_announcements:
+                            response_text = "I don't have any announcements available right now. Please check our News & Events page for recent announcements!"
+                        elif wants_achievements:
+                            response_text = "I don't have any achievements available right now. Please check our News & Events page for achievements!"
+                        else:
+                            response_text = "I don't have the latest updates right now. Please check our News & Events page for current information!"
+                    else:
+                        # If recent_content didn't work, try context_content as fallback
+                        if context_content and "No specific content" not in context_content:
+                            # Parse context_content to extract items
+                            lines = context_content.split('\n')
+                            context_items = []
+                            current_item = {}
+                            
+                            for line in lines:
+                                line = line.strip()
+                                if not line or line.startswith('===') or line.startswith('---'):
+                                    if current_item and current_item.get('title'):
+                                        context_items.append(current_item)
+                                    current_item = {}
+                                    continue
+                                
+                                if line.startswith('Achievement:'):
+                                    current_item = {'type': 'achievement', 'title': line.replace('Achievement:', '').strip()}
+                                elif line.startswith('Announcement:'):
+                                    current_item = {'type': 'announcement', 'title': line.replace('Announcement:', '').strip()}
+                                elif line.startswith('Event:'):
+                                    current_item = {'type': 'event', 'title': line.replace('Event:', '').strip()}
+                                elif line.startswith('News:'):
+                                    current_item = {'type': 'news', 'title': line.replace('News:', '').strip()}
+                                elif line.startswith('Link:') and current_item:
+                                    current_item['link'] = line.replace('Link:', '').strip()
+                            
+                            if current_item and current_item.get('title'):
+                                context_items.append(current_item)
+                            
+                            # Filter by type
+                            filtered_context_items = []
+                            if wants_achievements:
+                                filtered_context_items = [item for item in context_items if item.get('type') == 'achievement']
+                            elif wants_announcements:
+                                filtered_context_items = [item for item in context_items if item.get('type') == 'announcement']
+                            elif wants_events:
+                                filtered_context_items = [item for item in context_items if item.get('type') == 'event']
+                            elif wants_news:
+                                filtered_context_items = [item for item in context_items if item.get('type') == 'news']
+                            else:
+                                filtered_context_items = context_items[:5]
+                            
+                            if filtered_context_items:
+                                response_parts = []
+                                date_suffix = f" on {target_date.strftime('%B %d, %Y')}" if target_date else ""
+                                
+                                if wants_achievements:
+                                    response_parts.append(f"Here are the achievements{date_suffix}:\n")
+                                elif wants_announcements:
+                                    response_parts.append(f"Here are the announcements{date_suffix}:\n")
+                                elif wants_events:
+                                    response_parts.append(f"Here are the events{date_suffix}:\n")
+                                elif wants_news:
+                                    response_parts.append(f"Here's the news{date_suffix}:\n")
+                                else:
+                                    response_parts.append(f"Here's what I found{date_suffix}:\n")
+                                
+                                for item in filtered_context_items[:10]:
+                                    title = item.get('title', 'Untitled')
+                                    link = item.get('link', '')
+                                    if link:
+                                        response_parts.append(f"• {title} - [View details]({link})")
+                                    else:
+                                        response_parts.append(f"• {title}")
+                                
+                                response_text = "\n".join(response_parts)
+                            else:
+                                response_text = "I don't have the latest updates right now. Please check our News & Events page for current information!"
+                        else:
+                            response_text = "I don't have the latest updates right now. Please check our News & Events page for current information!"
+                else:
+                    # If recent_content is empty, try context_content
+                    if context_content and "No specific content" not in context_content:
+                        # Parse context_content to extract items
+                        lines = context_content.split('\n')
+                        context_items = []
+                        current_item = {}
+                        
+                        for line in lines:
+                            line = line.strip()
+                            if not line or line.startswith('===') or line.startswith('---'):
+                                if current_item and current_item.get('title'):
+                                    context_items.append(current_item)
+                                current_item = {}
+                                continue
+                            
+                            if line.startswith('Achievement:'):
+                                current_item = {'type': 'achievement', 'title': line.replace('Achievement:', '').strip()}
+                            elif line.startswith('Announcement:'):
+                                current_item = {'type': 'announcement', 'title': line.replace('Announcement:', '').strip()}
+                            elif line.startswith('Event:'):
+                                current_item = {'type': 'event', 'title': line.replace('Event:', '').strip()}
+                            elif line.startswith('News:'):
+                                current_item = {'type': 'news', 'title': line.replace('News:', '').strip()}
+                            elif line.startswith('Link:') and current_item:
+                                current_item['link'] = line.replace('Link:', '').strip()
+                        
+                        if current_item and current_item.get('title'):
+                            context_items.append(current_item)
+                        
+                        # Filter by type
+                        filtered_context_items = []
+                        if wants_achievements:
+                            filtered_context_items = [item for item in context_items if item.get('type') == 'achievement']
+                        elif wants_announcements:
+                            filtered_context_items = [item for item in context_items if item.get('type') == 'announcement']
+                        elif wants_events:
+                            filtered_context_items = [item for item in context_items if item.get('type') == 'event']
+                        elif wants_news:
+                            filtered_context_items = [item for item in context_items if item.get('type') == 'news']
+                        else:
+                            filtered_context_items = context_items[:5]
+                        
+                        if filtered_context_items:
+                            response_parts = []
+                            date_suffix = f" on {target_date.strftime('%B %d, %Y')}" if target_date else ""
+                            
+                            if wants_achievements:
+                                response_parts.append(f"Here are the achievements{date_suffix}:\n")
+                            elif wants_announcements:
+                                response_parts.append(f"Here are the announcements{date_suffix}:\n")
+                            elif wants_events:
+                                response_parts.append(f"Here are the events{date_suffix}:\n")
+                            elif wants_news:
+                                response_parts.append(f"Here's the news{date_suffix}:\n")
+                            else:
+                                response_parts.append(f"Here's what I found{date_suffix}:\n")
+                            
+                            for item in filtered_context_items[:10]:
+                                title = item.get('title', 'Untitled')
+                                link = item.get('link', '')
+                                if link:
+                                    response_parts.append(f"• {title} - [View details]({link})")
+                                else:
+                                    response_parts.append(f"• {title}")
+                            
+                            response_text = "\n".join(response_parts)
+                        else:
+                            response_text = "I don't have the latest updates available right now. Please check our News & Events page for current information!"
+                    else:
+                        response_text = "I don't have the latest updates available right now. Please check our News & Events page for current information!"
+            elif context_content and "No specific content" not in context_content:
+                # Parse context_content to extract items (especially for date-specific queries)
+                # Determine what content type the user wants
+                wants_news = any(word in user_message_lower for word in ['news', 'article', 'story'])
+                wants_announcements = any(word in user_message_lower for word in ['announcement', 'announce', 'notice'])
+                wants_events = any(word in user_message_lower for word in ['event', 'events', 'upcoming', 'schedule'])
+                wants_achievements = any(word in user_message_lower for word in ['achievement', 'achievements', 'award', 'awards'])
+                
+                # Extract items from context_content
+                lines = context_content.split('\n')
+                items = []
+                current_item = {}
+                
+                for line in lines:
+                    line = line.strip()
+                    if not line or line.startswith('===') or line.startswith('---'):
+                        if current_item and current_item.get('title'):
+                            items.append(current_item)
+                        current_item = {}
+                        continue
+                    
+                    # Detect content type
+                    if line.startswith('Achievement:'):
+                        current_item = {'type': 'achievement', 'title': line.replace('Achievement:', '').strip()}
+                    elif line.startswith('Announcement:'):
+                        current_item = {'type': 'announcement', 'title': line.replace('Announcement:', '').strip()}
+                    elif line.startswith('Event:'):
+                        current_item = {'type': 'event', 'title': line.replace('Event:', '').strip()}
+                    elif line.startswith('News:'):
+                        current_item = {'type': 'news', 'title': line.replace('News:', '').strip()}
+                    elif line.startswith('Link:') and current_item:
+                        current_item['link'] = line.replace('Link:', '').strip()
+                    elif line.startswith('Date:') and current_item:
+                        current_item['date'] = line.replace('Date:', '').strip()
+                
+                # Add last item if exists
+                if current_item and current_item.get('title'):
+                    items.append(current_item)
+                
+                # Filter items by type if user specified
+                filtered_items = []
+                if wants_achievements:
+                    filtered_items = [item for item in items if item.get('type') == 'achievement']
+                elif wants_announcements:
+                    filtered_items = [item for item in items if item.get('type') == 'announcement']
+                elif wants_events:
+                    filtered_items = [item for item in items if item.get('type') == 'event']
+                elif wants_news:
+                    filtered_items = [item for item in items if item.get('type') == 'news']
+                else:
+                    filtered_items = items[:5]  # Show first 5 if no specific type requested
+                
+                # Format response
+                if filtered_items:
+                    response_parts = []
+                    date_suffix = f" on {target_date.strftime('%B %d, %Y')}" if target_date else ""
+                    
+                    if wants_achievements:
+                        response_parts.append(f"Here are the achievements{date_suffix}:\n")
+                    elif wants_announcements:
+                        response_parts.append(f"Here are the announcements{date_suffix}:\n")
+                    elif wants_events:
+                        response_parts.append(f"Here are the events{date_suffix}:\n")
+                    elif wants_news:
+                        response_parts.append(f"Here's the news{date_suffix}:\n")
+                    else:
+                        response_parts.append(f"Here's what I found{date_suffix}:\n")
+                    
+                    for item in filtered_items[:10]:  # Limit to 10 items
+                        title = item.get('title', 'Untitled')
+                        link = item.get('link', '')
+                        if link:
+                            response_parts.append(f"• {title} - [View details]({link})")
+                        else:
+                            response_parts.append(f"• {title}")
+                    
+                    response_text = "\n".join(response_parts)
+                else:
+                    # Try to extract useful information from context (fallback)
+                    relevant_line = None
+                    for line in lines[:20]:  # Check first 20 lines
+                        if any(keyword in line.lower() for keyword in user_message_lower.split() if len(keyword) > 3):
+                            relevant_line = line
+                            break
+                    
+                    if relevant_line:
+                        # Extract title if available
+                        if ':' in relevant_line:
+                            title = relevant_line.split(':', 1)[1].strip()[:100]
+                            response_text = f"I found this: {title}. Would you like more details?"
+                        else:
+                            response_text = f"Here's what I found: {context_content[:150]}... Need more information?"
+                    else:
+                        date_msg = f" for {target_date.strftime('%B %d, %Y')}" if target_date else ""
+                        if wants_achievements:
+                            response_text = f"I don't have any achievements{date_msg} available right now. Please check our News & Events page!"
+                        elif wants_announcements:
+                            response_text = f"I don't have any announcements{date_msg} available right now. Please check our News & Events page!"
+                        elif wants_events:
+                            response_text = f"I don't have any events{date_msg} available right now. Please check our News & Events page!"
+                        elif wants_news:
+                            response_text = f"I don't have any news{date_msg} available right now. Please check our News & Events page!"
+                        else:
+                            response_text = "I'm not sure about that specific information. Could you rephrase your question, or would you like to check our website directly?"
+            else:
+                response_text = "I'm not sure about that. Can you ask in a different way, or would you like help with something else like admissions, programs, or events?"
+        
+        # Store the conversation
+        ChatbotMessage.objects.create(
+            session=session,
+            user_message=user_message,
+            bot_response=response_text
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': response_text,
+            'reply': response_text,
+            'session_id': session_id
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': "I'm sorry, I didn't understand that. Could you please rephrase?",
+            'reply': "I'm sorry, I didn't understand that. Could you please rephrase?"
+        }, status=400)
+    except Exception as e:
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
+        error_trace = traceback.format_exc()
+        logger.error(f'Chatbot error: {str(e)}\n{error_trace}', exc_info=True)
+        # In debug mode, return more details; in production, return generic message
+        error_message = f"I'm having trouble processing your request. Please try again later or contact us directly."
+        if settings.DEBUG:
+            error_message += f" Error: {str(e)}"
+        return JsonResponse({
+            'status': 'error',
+            'message': error_message,
+            'reply': error_message
         }, status=500)
 
 
