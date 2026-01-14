@@ -18,7 +18,7 @@ The API key has been set for your current PowerShell session.
 Create a file named `.env` in your project root (`C:\CodingProjects\ccbwebmain\.env`) with this content:
 
 ```env
-BREVO_API_KEY=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
+BREVO_API_KEY=YOUR_BREVO_API_KEY_HERE
 DEFAULT_FROM_EMAIL=citycollegeofbayawan@gmail.com
 SERVER_EMAIL=citycollegeofbayawan@gmail.com
 CONTACT_INBOX=citycollegeofbayawan@gmail.com
@@ -35,7 +35,7 @@ PUBLIC_BASE_URL=http://localhost:8000
 
 2. Under "User variables", click "New":
    - Variable name: `BREVO_API_KEY`
-   - Variable value: `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`
+   - Variable value: `YOUR_BREVO_API_KEY_HERE`
    - Click OK
 
 3. Restart your terminal/Django server
@@ -44,7 +44,7 @@ PUBLIC_BASE_URL=http://localhost:8000
 
 Add to your PowerShell profile:
 ```powershell
-$env:BREVO_API_KEY="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"
+$env:BREVO_API_KEY="YOUR_BREVO_API_KEY_HERE"
 ```
 
 ### 4. Install python-dotenv (if using .env file)
