@@ -29,4 +29,3 @@ const sendChatbotQuery = async ({ message, context, history }) => {
 export {
   sendChatbotQuery
 };
-
