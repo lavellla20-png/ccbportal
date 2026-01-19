@@ -1,6 +1,7 @@
 import { getOrCreateSessionId } from './sessionManager';
 
-const CHATBOT_ENDPOINT = '/api/chatbot/query/';
+const API_BASE = process.env.REACT_APP_API_URL || '';
+const CHATBOT_ENDPOINT = `${API_BASE}/api/chatbot/query/`;
 
 const sendChatbotQuery = async ({ message, context, history }) => {
   const payload = {
