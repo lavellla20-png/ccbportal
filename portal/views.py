@@ -3782,8 +3782,11 @@ def api_news(request):
                 'body': news.body,
                 'details': news.details if news.details else news.body
             }
+            # Always include image key for consistency with other endpoints
             if news.image:
                 news_item['image'] = build_safe_media_url(request, news)
+            else:
+                news_item['image'] = None
             news_data.append(news_item)
         
         return JsonResponse({
