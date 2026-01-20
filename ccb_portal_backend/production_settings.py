@@ -45,16 +45,22 @@ STATIC_URL = '/static/'
 
 # Cloudinary configuration for media files (persistent storage on free tier)
 # Get credentials from environment variables (set in Render dashboard)
-cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME', '')
-cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY', '')
-cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET', '')
+cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY')
+cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET')
 
 # Debug: Print to logs (will show in Render deployment logs)
 print(f"[CLOUDINARY DEBUG] Cloud Name: {cloudinary_cloud_name if cloudinary_cloud_name else 'NOT SET'}")
 print(f"[CLOUDINARY DEBUG] API Key: {'SET' if cloudinary_api_key else 'NOT SET'}")
 print(f"[CLOUDINARY DEBUG] API Secret: {'SET' if cloudinary_api_secret else 'NOT SET'}")
 
-if cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
+# CRITICAL: Fail if Cloudinary is not configured in production
+if not all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]):
+    print("[CLOUDINARY ERROR] Missing Cloudinary environment variables! Falling back to local storage (BROKEN ON RENDER)")
+    # We still fallback to avoid crashing during build, but this is definitely wrong for runtime
+    MEDIA_URL = '/media/'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+else:
     cloudinary.config(
         cloud_name=cloudinary_cloud_name,
         api_key=cloudinary_api_key,
@@ -63,14 +69,11 @@ if cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
     )
     # Use Cloudinary for media file storage (persists across deployments)
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    # Don't set MEDIA_URL - let Cloudinary storage backend handle it
-    # This ensures image.url returns proper Cloudinary URLs
-    print("[CLOUDINARY DEBUG] Using Cloudinary for media storage")
-else:
-    # Fallback to local storage if Cloudinary not configured
-    MEDIA_URL = '/media/'
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    print("[CLOUDINARY DEBUG] Using local file storage (Cloudinary NOT configured)")
+    print("[CLOUDINARY DEBUG] Using Cloudinary for media storage - SUCCESS")
+    
+    # Explicitly clear MEDIA_URL so Django uses the storage backend's URL
+    # or set it to None to be safe
+    MEDIA_URL = None
 
 # Keep MEDIA_ROOT for backward compatibility
 MEDIA_ROOT = BASE_DIR / 'media'
