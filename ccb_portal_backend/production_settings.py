@@ -57,8 +57,9 @@ if cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
         secure=True
     )
     # Use Cloudinary for media file storage (persists across deployments)
-    # Let MediaCloudinaryStorage handle URL generation automatically
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # Don't set MEDIA_URL - let Cloudinary storage backend handle it
+    # This ensures image.url returns proper Cloudinary URLs
 else:
     # Fallback to local storage if Cloudinary not configured
     MEDIA_URL = '/media/'
