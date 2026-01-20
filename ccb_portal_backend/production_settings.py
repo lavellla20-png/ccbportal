@@ -71,9 +71,8 @@ else:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     print("[CLOUDINARY DEBUG] Using Cloudinary for media storage - SUCCESS")
     
-    # Explicitly clear MEDIA_URL so Django uses the storage backend's URL
-    # or set it to None to be safe
-    MEDIA_URL = None
+    # We must have a MEDIA_URL for Django checks, even if Cloudinary handles the actual serving
+    MEDIA_URL = '/media/'
 
 # Keep MEDIA_ROOT for backward compatibility
 MEDIA_ROOT = BASE_DIR / 'media'
