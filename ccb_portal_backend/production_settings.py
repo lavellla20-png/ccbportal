@@ -49,6 +49,11 @@ cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME', '')
 cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY', '')
 cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET', '')
 
+# Debug: Print to logs (will show in Render deployment logs)
+print(f"[CLOUDINARY DEBUG] Cloud Name: {cloudinary_cloud_name if cloudinary_cloud_name else 'NOT SET'}")
+print(f"[CLOUDINARY DEBUG] API Key: {'SET' if cloudinary_api_key else 'NOT SET'}")
+print(f"[CLOUDINARY DEBUG] API Secret: {'SET' if cloudinary_api_secret else 'NOT SET'}")
+
 if cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
     cloudinary.config(
         cloud_name=cloudinary_cloud_name,
@@ -60,10 +65,12 @@ if cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     # Don't set MEDIA_URL - let Cloudinary storage backend handle it
     # This ensures image.url returns proper Cloudinary URLs
+    print("[CLOUDINARY DEBUG] Using Cloudinary for media storage")
 else:
     # Fallback to local storage if Cloudinary not configured
     MEDIA_URL = '/media/'
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    print("[CLOUDINARY DEBUG] Using local file storage (Cloudinary NOT configured)")
 
 # Keep MEDIA_ROOT for backward compatibility
 MEDIA_ROOT = BASE_DIR / 'media'
