@@ -179,6 +179,15 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': get_env_variable('CLOUDINARY_API_SECRET', 'cJGnBgAJGxxDU2bR9-UYx9sGiPA'),
 }
 
+# Ensure Cloudinary uses secure (HTTPS) URLs
+import cloudinary
+cloudinary.config(
+    cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+    api_key=CLOUDINARY_STORAGE['API_KEY'],
+    api_secret=CLOUDINARY_STORAGE['API_SECRET'],
+    secure=True  # Use HTTPS for all Cloudinary URLs
+)
+
 # Media files - Use Cloudinary in production, local storage in development
 MEDIA_URL = '/media/'
 
@@ -205,6 +214,7 @@ else:
         CORS_ALLOWED_ORIGINS = [
             "http://localhost:3000",
             "http://127.0.0.1:3000",
+            "https://ccb-portal-static.onrender.com",  # Static frontend site
         ]
     # Additional CORS security settings
     CORS_ALLOW_CREDENTIALS = True

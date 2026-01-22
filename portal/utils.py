@@ -127,6 +127,7 @@ def build_safe_media_url(request, file_field):
     """
     Build a safe media URL for file fields.
     Handles cases where file doesn't exist or URL generation fails.
+    Works with both Cloudinary storage and local file storage.
     
     Args:
         request: Django request object
@@ -155,12 +156,16 @@ def build_safe_media_url(request, file_field):
         if not url:
             return None
         
-        # If URL is relative, make it absolute
+        # If URL is already absolute (https:// or http:// or Cloudinary URL), return as-is
+        if url.startswith('http://') or url.startswith('https://') or 'cloudinary.com' in url:
+            return url
+        
+        # If URL is relative, make it absolute using request host
         if url.startswith('/'):
             # Use build_absolute_uri which handles the current request's host
             return request.build_absolute_uri(url)
         
-        # If already absolute, return as-is
+        # Fallback: return as-is
         return url
     except (ValueError, AttributeError, Exception) as e:
         # Log error in production (optional)
