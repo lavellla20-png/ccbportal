@@ -90,9 +90,10 @@ else:
     
     # We must have a MEDIA_URL for Django checks, even if Cloudinary handles the actual serving
     MEDIA_URL = '/media/'
-
-# Keep MEDIA_ROOT for backward compatibility
-MEDIA_ROOT = BASE_DIR / 'media'
+    
+    # CRITICAL: Do NOT set MEDIA_ROOT when using Cloudinary
+    # Setting MEDIA_ROOT confuses the storage backend
+    MEDIA_ROOT = None
 
 # Ensure WhiteNoise handles static files properly
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
