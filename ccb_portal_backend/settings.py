@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from django.core.exceptions import ImproperlyConfigured
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -102,19 +103,24 @@ WSGI_APPLICATION = 'ccb_portal_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ccb_portal',
-        'USER': 'root',
-        'PASSWORD': '',  # Default XAMPP MySQL has no password
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'sql_mode': 'STRICT_TRANS_TABLES',
-        },
+if DEBUG:
+    # Local development - MySQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'ccb_portal',
+            'USER': 'root',
+            'PASSWORD': '',
+            'HOST': 'localhost',
+            'PORT': '3306',
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'sql_mode': 'STRICT_TRANS_TABLES',
+            },
+        }
     }
+else:
+    # Production - PostgreSQL from Render
     DATABASES = {
         'default': dj_database_url.config(
             default=get_env_variable('DATABASE_URL', required=True),
@@ -122,7 +128,6 @@ DATABASES = {
             conn_health_checks=True,
         )
     }
-}
 
 
 # Password validation
