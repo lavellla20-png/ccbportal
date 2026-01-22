@@ -159,9 +159,25 @@ STATICFILES_DIRS = [
     BASE_DIR / 'build',  # React build files
 ]
 
-# Media files
+# Cloudinary Configuration
+# Get credentials from environment variables
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': get_env_variable('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': get_env_variable('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': get_env_variable('CLOUDINARY_API_SECRET', ''),
+}
+
+# Media files - Use Cloudinary in production, local storage in development
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# Check if Cloudinary is configured
+if CLOUDINARY_STORAGE['CLOUD_NAME'] and CLOUDINARY_STORAGE['API_KEY']:
+    # Use Cloudinary for media files
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_ROOT = None  # Not needed when using Cloudinary
+else:
+    # Fallback to local storage for development
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS settings
 # Security: Restrict CORS in production
