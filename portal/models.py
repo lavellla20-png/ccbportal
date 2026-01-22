@@ -1,6 +1,13 @@
 from django.db import models
 from django.utils import timezone
 
+# Try to import Cloudinary storage, fallback to default
+try:
+    from cloudinary_storage.storage import MediaCloudinaryStorage
+    cloudinary_storage = MediaCloudinaryStorage()
+except ImportError:
+    cloudinary_storage = None
+
 # Create your models here.
 
 class AcademicProgram(models.Model):
@@ -85,7 +92,13 @@ class Announcement(models.Model):
     date = models.DateField()
     body = models.TextField()
     details = models.TextField(blank=True, help_text="Full details shown in modal; falls back to body if empty")
-    image = models.ImageField(upload_to='announcements/', blank=True, null=True, help_text="Announcement image")
+    image = models.ImageField(
+        upload_to='announcements/',
+        blank=True,
+        null=True,
+        help_text="Announcement image",
+        storage=cloudinary_storage
+    )
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -109,7 +122,13 @@ class Event(models.Model):
     start_time = models.TimeField(help_text="Start time of the event")
     end_time = models.TimeField(help_text="End time of the event")
     location = models.CharField(max_length=200, blank=True, help_text="Event location")
-    image = models.ImageField(upload_to='events/', blank=True, null=True, help_text="Event image")
+    image = models.ImageField(
+        upload_to='events/',
+        blank=True,
+        null=True,
+        help_text="Event image",
+        storage=cloudinary_storage
+    )
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0, help_text="Order for display on website")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -141,7 +160,13 @@ class Achievement(models.Model):
     details = models.TextField(blank=True, help_text="Full details shown in modal; falls back to description if empty")
     achievement_date = models.DateField(help_text="Date of the achievement")
     category = models.CharField(max_length=50, default='Achievement', help_text="Category (e.g., Achievement, Press Release, Award)")
-    image = models.ImageField(upload_to='achievements/', blank=True, null=True, help_text="Achievement image")
+    image = models.ImageField(
+        upload_to='achievements/',
+        blank=True,
+        null=True,
+        help_text="Achievement image",
+        storage=cloudinary_storage
+    )
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0, help_text="Order for display on website")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -387,7 +412,13 @@ class News(models.Model):
     date = models.DateField(help_text="Publication date")
     body = models.TextField(help_text="News content")
     details = models.TextField(blank=True, help_text="Full details shown in modal; falls back to body if empty")
-    image = models.ImageField(upload_to='news/', blank=True, null=True, help_text="News image")
+    image = models.ImageField(
+        upload_to='news/',
+        blank=True,
+        null=True,
+        help_text="News image",
+        storage=cloudinary_storage  # Force Cloudinary storage for images
+    )
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
