@@ -45,14 +45,31 @@ STATIC_URL = '/static/'
 
 # Cloudinary configuration for media files (persistent storage on free tier)
 # Get credentials from environment variables (set in Render dashboard)
+# Support both CLOUDINARY_URL and individual components
+
+cloudinary_url = os.getenv('CLOUDINARY_URL')
 cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
 cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY')
 cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET')
+
+# If CLOUDINARY_URL is set, parse it
+if cloudinary_url and not all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]):
+    # CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
+    try:
+        import urllib.parse
+        parsed = urllib.parse.urlparse(cloudinary_url)
+        cloudinary_cloud_name = parsed.hostname or cloudinary_cloud_name
+        cloudinary_api_key = parsed.username or cloudinary_api_key
+        cloudinary_api_secret = parsed.password or cloudinary_api_secret
+        print(f"[CLOUDINARY DEBUG] Parsed CLOUDINARY_URL successfully")
+    except Exception as e:
+        print(f"[CLOUDINARY ERROR] Failed to parse CLOUDINARY_URL: {e}")
 
 # Debug: Print to logs (will show in Render deployment logs)
 print(f"[CLOUDINARY DEBUG] Cloud Name: {cloudinary_cloud_name if cloudinary_cloud_name else 'NOT SET'}")
 print(f"[CLOUDINARY DEBUG] API Key: {'SET' if cloudinary_api_key else 'NOT SET'}")
 print(f"[CLOUDINARY DEBUG] API Secret: {'SET' if cloudinary_api_secret else 'NOT SET'}")
+print(f"[CLOUDINARY DEBUG] Using storage: {'Cloudinary' if all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]) else 'LOCAL (BROKEN)'}")
 
 # CRITICAL: Fail if Cloudinary is not configured in production
 if not all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]):

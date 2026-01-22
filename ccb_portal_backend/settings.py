@@ -173,11 +173,30 @@ STATICFILES_DIRS = [
 
 # Cloudinary Configuration
 # Get credentials from environment variables
+# Support both CLOUDINARY_URL and individual components
+
+cloudinary_url = os.getenv('CLOUDINARY_URL')
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': get_env_variable('CLOUDINARY_CLOUD_NAME', 'dvodewe6g'),
     'API_KEY': get_env_variable('CLOUDINARY_API_KEY', '618824283564593'),
     'API_SECRET': get_env_variable('CLOUDINARY_API_SECRET', 'cJGnBgAJGxxDU2bR9-UYx9sGiPA'),
 }
+
+# If CLOUDINARY_URL is set, parse it and override defaults
+if cloudinary_url:
+    try:
+        import urllib.parse
+        parsed = urllib.parse.urlparse(cloudinary_url)
+        if parsed.hostname:
+            CLOUDINARY_STORAGE['CLOUD_NAME'] = parsed.hostname
+        if parsed.username:
+            CLOUDINARY_STORAGE['API_KEY'] = parsed.username
+        if parsed.password:
+            CLOUDINARY_STORAGE['API_SECRET'] = parsed.password
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to parse CLOUDINARY_URL: {e}")
 
 # Ensure Cloudinary uses secure (HTTPS) URLs
 import cloudinary
