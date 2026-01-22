@@ -172,52 +172,23 @@ STATICFILES_DIRS = [
 ]
 
 # Cloudinary Configuration
-# Get credentials from environment variables
-# Support both CLOUDINARY_URL and individual components
+# NOTE: In production, this will be overridden by production_settings.py
+# In development, we use local storage
+# DO NOT call cloudinary.config() here - let production_settings.py handle it
 
 cloudinary_url = os.getenv('CLOUDINARY_URL')
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': get_env_variable('CLOUDINARY_CLOUD_NAME', 'dvodewe6g'),
-    'API_KEY': get_env_variable('CLOUDINARY_API_KEY', '618824283564593'),
-    'API_SECRET': get_env_variable('CLOUDINARY_API_SECRET', 'cJGnBgAJGxxDU2bR9-UYx9sGiPA'),
+    'CLOUD_NAME': '',
+    'API_KEY': '',
+    'API_SECRET': '',
 }
 
-# If CLOUDINARY_URL is set, parse it and override defaults
-if cloudinary_url:
-    try:
-        import urllib.parse
-        parsed = urllib.parse.urlparse(cloudinary_url)
-        if parsed.hostname:
-            CLOUDINARY_STORAGE['CLOUD_NAME'] = parsed.hostname
-        if parsed.username:
-            CLOUDINARY_STORAGE['API_KEY'] = parsed.username
-        if parsed.password:
-            CLOUDINARY_STORAGE['API_SECRET'] = parsed.password
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(f"Failed to parse CLOUDINARY_URL: {e}")
-
-# Ensure Cloudinary uses secure (HTTPS) URLs
-import cloudinary
-cloudinary.config(
-    cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
-    api_key=CLOUDINARY_STORAGE['API_KEY'],
-    api_secret=CLOUDINARY_STORAGE['API_SECRET'],
-    secure=True  # Use HTTPS for all Cloudinary URLs
-)
-
-# Media files - Use Cloudinary in production, local storage in development
+# Media files - Default to local storage in development
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
-# Check if Cloudinary is configured
-if CLOUDINARY_STORAGE['CLOUD_NAME'] and CLOUDINARY_STORAGE['API_KEY']:
-    # Use Cloudinary for media files
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_ROOT = None  # Not needed when using Cloudinary
-else:
-    # Fallback to local storage for development
-    MEDIA_ROOT = BASE_DIR / 'media'
+# Default to local storage - production_settings.py will override if needed
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # CORS settings
 # Security: Restrict CORS in production
