@@ -173,3 +173,69 @@ def build_safe_media_url(request, file_field):
         logger = logging.getLogger(__name__)
         logger.warning(f"Failed to build media URL: {e}")
         return None
+
+
+def build_production_media_url(file_field, base_url=None):
+    """
+    Build a production-ready media URL for file fields.
+    This is optimized for production deployment where we know the base URL.
+    
+    Args:
+        file_field: Django ImageField or FileField instance (or model instance with image/file field)
+        base_url: Base URL for the backend (e.g., https://ccb-portal-backend.onrender.com)
+    
+    Returns:
+        Absolute URL string or None
+    """
+    if not file_field:
+        return None
+    
+    try:
+        # Get the base URL from settings or parameter
+        if not base_url:
+            from django.conf import settings
+            base_url = getattr(settings, 'PUBLIC_BASE_URL', None)
+            if not base_url:
+                # Fallback to environment variable
+                import os
+                base_url = os.getenv('PUBLIC_BASE_URL', '')
+        
+        if not base_url:
+            return None
+            
+        # Ensure base_url doesn't end with slash
+        base_url = base_url.rstrip('/')
+        
+        # Handle direct FileField/ImageField access
+        if hasattr(file_field, 'url'):
+            url = file_field.url
+        # Handle model instance with image field
+        elif hasattr(file_field, 'image') and file_field.image:
+            url = file_field.image.url
+        # Handle model instance with file field
+        elif hasattr(file_field, 'file') and file_field.file:
+            url = file_field.file.url
+        else:
+            return None
+        
+        # Ensure URL is properly formatted
+        if not url:
+            return None
+        
+        # If URL is already absolute (https:// or http:// or Cloudinary URL), return as-is
+        if url.startswith('http://') or url.startswith('https://') or 'cloudinary.com' in url:
+            return url
+        
+        # If URL is relative, prepend base URL
+        if url.startswith('/'):
+            return f"{base_url}{url}"
+        else:
+            # Handle relative paths without leading slash
+            return f"{base_url}/{url}"
+            
+    except (ValueError, AttributeError, Exception) as e:
+        # Log error in production
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to build production media URL: {e}")
+        return None

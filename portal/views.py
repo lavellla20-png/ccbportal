@@ -20,7 +20,7 @@ from functools import wraps
 import datetime
 from email.mime.image import MIMEImage
 from .models import AcademicProgram, ProgramSpecialization, Announcement, Event, Achievement, ContactSubmission, EmailVerification, Department, Personnel, AdmissionRequirement, EnrollmentProcessStep, AdmissionNote, News, InstitutionalInfo, Download, ChatbotSession, ChatbotMessage
-from .utils import build_safe_media_url, sanitize_input, validate_file_upload
+from .utils import build_safe_media_url, build_production_media_url, sanitize_input, validate_file_upload
 # from .chatbot_utils import retrieve_relevant_content, get_recent_content_summary, parse_date_from_query
 import os
 import uuid
@@ -67,6 +67,19 @@ def _compute_frontend_base_url() -> str:
     except Exception:
         ip = "127.0.0.1"
     return f"http://{ip}:3000"
+
+
+def _get_media_url_for_response(request, file_field):
+    """
+    Get media URL for API responses, optimized for production.
+    Uses build_production_media_url in production for better performance.
+    """
+    # In production, use the optimized production function
+    if not settings.DEBUG:
+        return build_production_media_url(file_field)
+    
+    # In development, use the request-based function
+    return build_safe_media_url(request, file_field)
 
 
 # Utility: robustly parse dates from various common formats
@@ -449,7 +462,7 @@ def api_downloads(request):
                 'id': download.id,
                 'title': download.title,
                 'description': download.description,
-                'file_url': build_safe_media_url(request, download.file) if download.file else None,
+                'file_url': _get_media_url_for_response(request, download.file) if download.file else None,
                 'file_type': download.file_type or 'FILE',
                 'category': download.category,
                 'category_display': download.get_category_display()
@@ -478,7 +491,7 @@ def api_announcements(request):
                 'date': a.date.isoformat(),
                 'body': a.body,
                 'details': a.details,
-                'image': build_safe_media_url(request, a) if a.image else None,
+                'image': _get_media_url_for_response(request, a) if a.image else None,
             }
             for a in items
         ]
@@ -553,7 +566,7 @@ def api_create_announcement(request):
                 'id': announcement.id,
                 'title': announcement.title,
                 'date': announcement.date.isoformat(),
-                'image': build_safe_media_url(request, announcement) if announcement.image else None
+                'image': _get_media_url_for_response(request, announcement) if announcement.image else None
             }
         }, status=201)
     
@@ -697,7 +710,7 @@ def api_events(request):
                 'display_order': e.display_order,
             }
             if e.image:
-                event_data['image'] = build_safe_media_url(request, e)
+                event_data['image'] = _get_media_url_for_response(request, e)
             else:
                 event_data['image'] = None
             data.append(event_data)
@@ -724,7 +737,7 @@ def api_achievements(request):
                 'display_order': a.display_order,
             }
             if a.image:
-                achievement_data['image'] = build_safe_media_url(request, a)
+                achievement_data['image'] = _get_media_url_for_response(request, a)
             else:
                 achievement_data['image'] = None
             data.append(achievement_data)
@@ -1835,7 +1848,7 @@ def api_admin_events(request):
                 'updated_at': event.updated_at.isoformat()
             }
             if event.image:
-                event_data['image'] = request.build_absolute_uri(event.image.url)
+                event_data['image'] = _get_media_url_for_response(request, event)
             else:
                 event_data['image'] = None
             events_data.append(event_data)
@@ -1872,7 +1885,7 @@ def api_admin_achievements(request):
                 'created_at': achievement.created_at.isoformat(),
                 'updated_at': achievement.updated_at.isoformat()
             }
-            achievement_data['image'] = build_safe_media_url(request, achievement)
+            achievement_data['image'] = _get_media_url_for_response(request, achievement)
             achievements_data.append(achievement_data)
         
         return JsonResponse({
@@ -1901,7 +1914,7 @@ def api_admin_announcements(request):
                 'date': announcement.date.isoformat(),
                 'body': announcement.body,
                 'details': announcement.details,
-                'image': request.build_absolute_uri(announcement.image.url) if announcement.image else None,
+                'image': _get_media_url_for_response(request, announcement) if announcement.image else None,
                 'is_active': announcement.is_active,
                 'display_order': announcement.display_order,
                 'created_at': announcement.created_at.isoformat(),
@@ -3548,7 +3561,7 @@ def api_admin_news(request):
                 'updated_at': news.updated_at.isoformat()
             }
             if news.image:
-                news_item['image'] = build_safe_media_url(request, news)
+                news_item['image'] = _get_media_url_for_response(request, news)
             else:
                 news_item['image'] = None
             news_data.append(news_item)

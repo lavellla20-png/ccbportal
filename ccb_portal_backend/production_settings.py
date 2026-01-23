@@ -1,123 +1,123 @@
-# Production settings override for Render deployment
+"""
+Production settings for CCB Portal on Render
+This file contains production-specific settings that override the main settings.py
+"""
+
 import os
-import dj_database_url
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-from cloudinary_storage.storage import MediaCloudinaryStorage
 from .settings import *
 
-# SECURITY: Override with production values
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# Parse ALLOWED_HOSTS from environment variable
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+# Force HTTPS in production
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Database: PostgreSQL on Render
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
-
-# CORS: Allow frontend domain
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-    'x-http-method-override',
+# Update allowed hosts for production
+ALLOWED_HOSTS = [
+    'ccb-portal-backend.onrender.com',
+    'localhost',
+    '127.0.0.1',
 ]
 
-# Static and Media files
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATIC_URL = '/static/'
+# CORS configuration for production
+CORS_ALLOWED_ORIGINS = [
+    "https://ccb-portal-frontend.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
-# Cloudinary configuration for media files (persistent storage on free tier)
-# Get credentials from environment variables (set in Render dashboard)
-# Support both CLOUDINARY_URL and individual components
+# Ensure the backend URL is properly set
+PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'https://ccb-portal-backend.onrender.com')
 
-cloudinary_url = os.getenv('CLOUDINARY_URL')
-cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
-cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY')
-cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET')
-
-print(f"\n[CLOUDINARY CONFIG] Starting Cloudinary configuration...")
-print(f"[CLOUDINARY CONFIG] CLOUDINARY_URL present: {bool(cloudinary_url)}")
-print(f"[CLOUDINARY CONFIG] CLOUDINARY_CLOUD_NAME present: {bool(cloudinary_cloud_name)}")
-
-# If CLOUDINARY_URL is set, parse it (takes precedence)
-if cloudinary_url:
-    try:
-        import urllib.parse
-        # CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
-        parsed = urllib.parse.urlparse(cloudinary_url)
-        if parsed.hostname:
-            cloudinary_cloud_name = parsed.hostname
-            print(f"[CLOUDINARY CONFIG] Parsed cloud_name from CLOUDINARY_URL: {cloudinary_cloud_name}")
-        if parsed.username:
-            cloudinary_api_key = parsed.username
-            print(f"[CLOUDINARY CONFIG] Parsed api_key from CLOUDINARY_URL: SET")
-        if parsed.password:
-            cloudinary_api_secret = parsed.password
-            print(f"[CLOUDINARY CONFIG] Parsed api_secret from CLOUDINARY_URL: SET")
-    except Exception as e:
-        print(f"[CLOUDINARY ERROR] Failed to parse CLOUDINARY_URL: {e}")
-
-# Final validation
-print(f"\n[CLOUDINARY CONFIG] Final configuration check:")
-print(f"[CLOUDINARY CONFIG] Cloud Name: {cloudinary_cloud_name if cloudinary_cloud_name else 'NOT SET'}")
-print(f"[CLOUDINARY CONFIG] API Key: {'SET' if cloudinary_api_key else 'NOT SET'}")
-print(f"[CLOUDINARY CONFIG] API Secret: {'SET' if cloudinary_api_secret else 'NOT SET'}")
-
-# FORCE Cloudinary storage in production, regardless of configuration status
-# If credentials are missing, uploads will fail (which is better than silently using local disk)
-if cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
-    print(f"\n[CLOUDINARY SUCCESS] Configuring Cloudinary with all credentials present")
-    cloudinary.config(
-        cloud_name=cloudinary_cloud_name,
-        api_key=cloudinary_api_key,
-        api_secret=cloudinary_api_secret,
-        secure=True
-    )
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    print(f"[CLOUDINARY SUCCESS] ✓ DEFAULT_FILE_STORAGE = MediaCloudinaryStorage")
-    print(f"[CLOUDINARY SUCCESS] ✓ Images will be uploaded to Cloudinary CDN")
-else:
-    print(f"\n[CLOUDINARY ERROR] MISSING CREDENTIALS - Setting to FileSystemStorage as fallback")
-    print(f"[CLOUDINARY ERROR] This is a MISCONFIGURATION - files will be lost on redeploy!")
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-# Media URL configuration
+# Media files configuration for production
+# Render will serve media files via nginx, but we need to ensure proper URL construction
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-print(f"\n[CLOUDINARY CONFIG] MEDIA_URL = {MEDIA_URL}")
-print(f"[CLOUDINARY CONFIG] MEDIA_ROOT = {MEDIA_ROOT}")
-print(f"[CLOUDINARY CONFIG] Configuration complete.\n")
+# Static files configuration
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Ensure WhiteNoise handles static files properly
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Email configuration (using Brevo)
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+ANYMAIL = {
+    "BREVO_API_KEY": os.getenv("BREVO_API_KEY", ""),
+}
 
-# Security settings
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000
+# Security settings for production
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Additional CORS settings for media files
-# Cloudinary serves images via CDN, so CORS is handled by Cloudinary
-# Allow requests from any origin for API endpoints
-CORS_URLS_REGEX = r'^/api/.*$'
+# Session and CSRF security
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Database configuration (PostgreSQL from Render)
+if not DEBUG:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+
+# Logging configuration for production
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'portal': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Cache configuration (using Redis if available, otherwise local memory)
+if os.getenv('REDIS_URL'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv('REDIS_URL'),
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }

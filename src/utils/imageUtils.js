@@ -18,14 +18,14 @@ export const normalizeImageUrl = (imageUrl) => {
   const BACKEND_URL = backendUrl.replace(/\/$/, ''); // Remove trailing slash
   
   try {
-    // If it's a relative URL (starts with /), prepend backend URL
-    if (imageUrl.startsWith('/')) {
-      return `${BACKEND_URL}${imageUrl}`;
-    }
-    
     // If it's already an absolute URL with http/https, return as is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
+    }
+    
+    // If it's a relative URL (starts with /), prepend backend URL
+    if (imageUrl.startsWith('/')) {
+      return `${BACKEND_URL}${imageUrl}`;
     }
     
     // Otherwise, assume it's a path without leading slash and prepend backend + /

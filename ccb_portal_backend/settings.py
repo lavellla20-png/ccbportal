@@ -46,7 +46,7 @@ if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
     # In production, specify allowed hosts
-    allowed_hosts_env = get_env_variable('ALLOWED_HOSTS', '')
+    allowed_hosts_env = get_env_variable('ALLOWED_HOSTS', '*')
     ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()] if allowed_hosts_env else []
     if not ALLOWED_HOSTS:
         raise ImproperlyConfigured("ALLOWED_HOSTS must be set in production via environment variable")
@@ -189,6 +189,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default to local storage - production_settings.py will override if needed
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# Production Media Configuration
+# Serve media files in production (Render will handle this via nginx)
+# But we need to ensure the URLs are properly constructed
+if not DEBUG:
+    # Ensure MEDIA_URL is absolute URL for production
+    PUBLIC_MEDIA_URL = get_env_variable('PUBLIC_MEDIA_URL', f"{get_env_variable('PUBLIC_BASE_URL', '')}/media/")
+    if PUBLIC_MEDIA_URL and not PUBLIC_MEDIA_URL.endswith('/'):
+        PUBLIC_MEDIA_URL += '/'
 
 # CORS settings
 # Security: Restrict CORS in production
