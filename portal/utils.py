@@ -179,6 +179,7 @@ def build_production_media_url(file_field, base_url=None):
     """
     Build a production-ready media URL for file fields.
     This is optimized for production deployment where we know the base URL.
+    Supports both Cloudinary and local file storage.
     
     Args:
         file_field: Django ImageField or FileField instance (or model instance with image/file field)
@@ -191,21 +192,6 @@ def build_production_media_url(file_field, base_url=None):
         return None
     
     try:
-        # Get the base URL from settings or parameter
-        if not base_url:
-            from django.conf import settings
-            base_url = getattr(settings, 'PUBLIC_BASE_URL', None)
-            if not base_url:
-                # Fallback to environment variable
-                import os
-                base_url = os.getenv('PUBLIC_BASE_URL', '')
-        
-        if not base_url:
-            return None
-            
-        # Ensure base_url doesn't end with slash
-        base_url = base_url.rstrip('/')
-        
         # Handle direct FileField/ImageField access
         if hasattr(file_field, 'url'):
             url = file_field.url
@@ -226,7 +212,27 @@ def build_production_media_url(file_field, base_url=None):
         if url.startswith('http://') or url.startswith('https://') or 'cloudinary.com' in url:
             return url
         
-        # If URL is relative, prepend base URL
+        # For Cloudinary, we don't need to prepend base URL - Cloudinary handles it
+        from django.conf import settings
+        if hasattr(settings, 'DEFAULT_FILE_STORAGE') and 'cloudinary' in settings.DEFAULT_FILE_STORAGE.lower():
+            # Cloudinary URLs are already absolute
+            return url
+        
+        # Get the base URL from settings or parameter (for local storage)
+        if not base_url:
+            base_url = getattr(settings, 'PUBLIC_BASE_URL', None)
+            if not base_url:
+                # Fallback to environment variable
+                import os
+                base_url = os.getenv('PUBLIC_BASE_URL', '')
+        
+        if not base_url:
+            return None
+            
+        # Ensure base_url doesn't end with slash
+        base_url = base_url.rstrip('/')
+        
+        # If URL is relative, prepend base URL (for local storage)
         if url.startswith('/'):
             return f"{base_url}{url}"
         else:

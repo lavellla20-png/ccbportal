@@ -30,14 +30,34 @@ CORS_ALLOWED_ORIGINS = [
 # Ensure the backend URL is properly set
 PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'https://ccb-portal-backend.onrender.com')
 
-# Media files configuration for production
-# Render will serve media files via nginx, but we need to ensure proper URL construction
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Cloudinary Configuration for Production
+# Use Cloudinary for image storage in production
+import cloudinary
+from cloudinary import config as cloudinary_config
+
+# Configure Cloudinary from environment variables
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'your-cloud-name')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', 'your-api-key')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', 'your-api-secret')
+
+# Initialize Cloudinary
+cloudinary_config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET
+)
+
+# Cloudinary storage configuration
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticCloudinaryStorage'
+
+# Media files configuration for Cloudinary
+MEDIA_URL = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/'
+MEDIA_ROOT = ''  # Not used with Cloudinary
 
 # Static files configuration
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/static/'
+STATIC_ROOT = ''  # Not used with Cloudinary
 
 # Email configuration (using Brevo)
 EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
