@@ -53,7 +53,6 @@ class AudioManager {
     
     // Strategy 2: Try to play with muted audio first (often allowed)
     try {
-      const wasMuted = this.audio.muted;
       this.audio.muted = true;
       await this.audio.play();
       this.isPlaying = true;

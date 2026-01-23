@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
@@ -297,19 +297,19 @@ const NewsEvents = () => {
   }, []);
 
   // Helper function to clear URL parameters
-  const clearUrlParams = (paramName) => {
+  const clearUrlParams = useCallback((paramName) => {
     const params = new URLSearchParams(window.location.search);
     if (params.has(paramName)) {
       params.delete(paramName);
-      const newUrl = params.toString() 
-        ? `${window.location.pathname}?${params.toString()}` 
+      const newUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
         : window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
-  };
+  }, []);
 
   // Smoothly scroll to a section on this page
-  const scrollToSection = (sectionKey) => {
+  const scrollToSection = useCallback((sectionKey) => {
     const selectors = {
       events: '.events-section',
       news: '.news-section-content',
@@ -321,18 +321,17 @@ const NewsEvents = () => {
     const el = document.querySelector(selector);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-      // Apply an offset for navbar
       const yOffset = -80;
       const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
     return el;
-  };
+  }, []);
 
   const MODAL_OPEN_DELAY_MS = 400; // slight delay before opening modal after section becomes visible
 
   // Scroll to section, then open a specific modal once the section is in view (with fallback)
-  const openAfterScroll = (sectionKey, openFn, clearKeys = []) => {
+  const openAfterScroll = useCallback((sectionKey, openFn, clearKeys = []) => {
     const selectors = {
       events: '.events-section',
       news: '.news-section-content',
@@ -355,7 +354,6 @@ const NewsEvents = () => {
       openTimeout = setTimeout(doOpen, MODAL_OPEN_DELAY_MS);
     };
 
-    // If selector missing, just open immediately
     if (!targetEl) {
       scheduleOpen();
       return;
@@ -385,7 +383,7 @@ const NewsEvents = () => {
       clearTimeout(fallback);
       if (openTimeout) clearTimeout(openTimeout);
     };
-  };
+  }, [clearUrlParams, scrollToSection]);
 
   // Open modal via deep-link query params
   // Supported:
@@ -511,7 +509,7 @@ const NewsEvents = () => {
         setDeepLinkHandled(true);
       }
     }
-  }, [events, announcements, achievements, news, deepLinkHandled]);
+  }, [events, announcements, achievements, news, deepLinkHandled, openAfterScroll, clearUrlParams, scrollToSection]);
 
   const formatDate = (iso) => {
     try {
@@ -538,48 +536,44 @@ const NewsEvents = () => {
     setIsModalOpen(true);
   };
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedAnnouncement(null);
-    // Clear URL parameters when modal is closed (in case they somehow still exist)
     clearUrlParams('announcementId');
-  };
+  }, [clearUrlParams]);
 
   const openEventModal = (item) => {
     setSelectedEvent(item);
     setIsEventModalOpen(true);
   };
 
-  const closeEventModal = () => {
+  const closeEventModal = useCallback(() => {
     setIsEventModalOpen(false);
     setSelectedEvent(null);
-    // Clear URL parameters when modal is closed (in case they somehow still exist)
     clearUrlParams('eventId');
-  };
+  }, [clearUrlParams]);
 
   const openAchievementModal = (item) => {
     setSelectedAchievement(item);
     setIsAchievementModalOpen(true);
   };
 
-  const closeAchievementModal = () => {
+  const closeAchievementModal = useCallback(() => {
     setIsAchievementModalOpen(false);
     setSelectedAchievement(null);
-    // Clear URL parameters when modal is closed (in case they somehow still exist)
     clearUrlParams('achievementId');
-  };
+  }, [clearUrlParams]);
 
   const openNewsModal = (item) => {
     setSelectedNews(item);
     setIsNewsModalOpen(true);
   };
 
-  const closeNewsModal = () => {
+  const closeNewsModal = useCallback(() => {
     setIsNewsModalOpen(false);
     setSelectedNews(null);
-    // Clear URL parameters when modal is closed (in case they somehow still exist)
     clearUrlParams('newsId');
-  };
+  }, [clearUrlParams]);
 
   const openDateDetailModal = (date, events, announcements, news, achievements) => {
     setSelectedDate(date);
@@ -592,11 +586,11 @@ const NewsEvents = () => {
     setIsDateDetailModalOpen(true);
   };
 
-  const closeDateDetailModal = () => {
+  const closeDateDetailModal = useCallback(() => {
     setIsDateDetailModalOpen(false);
     setSelectedDate(null);
     setSelectedDateItems(null);
-  };
+  }, []);
 
   // Pagination helpers
   const changePage = (targetPage, totalItems, currentPageSetter, currentPageValue, sectionKey) => {
@@ -695,7 +689,7 @@ const NewsEvents = () => {
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
     };
-  }, [isModalOpen, isEventModalOpen, isAchievementModalOpen, isNewsModalOpen, isDateDetailModalOpen]);
+  }, [isModalOpen, isEventModalOpen, isAchievementModalOpen, isNewsModalOpen, isDateDetailModalOpen, closeModal, closeEventModal, closeAchievementModal, closeNewsModal, closeDateDetailModal]);
 
   const renderDetails = (text) => {
     if (!text) return null;
@@ -787,10 +781,7 @@ const NewsEvents = () => {
   }, [achievements]);
 
   // Pagination calculations
-  const totalEventPages = Math.max(1, Math.ceil(events.length / itemsPerPage));
-  const totalNewsPages = Math.max(1, Math.ceil(news.length / itemsPerPage));
-  const totalAnnouncementPages = Math.max(1, Math.ceil(announcements.length / itemsPerPage));
-  const totalAchievementPages = Math.max(1, Math.ceil(achievements.length / itemsPerPage));
+  // Removed unused pagination count variables to satisfy ESLint no-unused-vars
 
   const pagedEvents = events.slice((eventsPage - 1) * itemsPerPage, eventsPage * itemsPerPage);
   const pagedNews = news.slice((newsPage - 1) * itemsPerPage, newsPage * itemsPerPage);

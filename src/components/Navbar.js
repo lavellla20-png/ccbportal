@@ -425,12 +425,13 @@ const Navbar = ({ isTopBarVisible = true, isHomePage = false }) => {
                 }
               }}
             >
-              <a
-                href="#"
+              <button
+                type="button"
                 className="nav-link services-nav-link"
-                onClick={(e) => {
+                aria-haspopup="true"
+                aria-expanded={isServicesDropdownOpen}
+                onClick={() => {
                   if (window.innerWidth <= 1024) {
-                    e.preventDefault();
                     setIsServicesDropdownOpen(!isServicesDropdownOpen);
                   }
                 }}
@@ -442,7 +443,7 @@ const Navbar = ({ isTopBarVisible = true, isHomePage = false }) => {
               >
                 SERVICES
                 <span className={`dropdown-arrow ${isServicesDropdownOpen ? 'open' : ''}`}>▼</span>
-              </a>
+              </button>
               <div
                 className={`services-dropdown ${isServicesDropdownOpen ? 'dropdown-open' : ''}`}
                 onMouseEnter={() => {

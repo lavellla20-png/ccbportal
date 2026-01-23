@@ -23,16 +23,17 @@ const ContactUs = () => {
   // Animation state
   const [isMapContainerVisible, setIsMapContainerVisible] = useState(false);
 
+  // Safe character filtering: keep letters, numbers, punctuation, and spaces; optionally keep newlines
+  const stripUnsafe = (value, preserveNewlines = false) => {
+    if (value == null) return '';
+    const pattern = preserveNewlines ? /[^\p{L}\p{N}\p{P}\p{Zs}\n]/gu : /[^\p{L}\p{N}\p{P}\p{Zs}]/gu;
+    return String(value).replace(pattern, '');
+  };
+
   // Input sanitization function (for submission, not real-time)
-  const sanitizeInput = (value, maxLength = null, allowSpaces = true) => {
-    if (!value) return '';
-    // Remove null bytes and control characters (preserve spaces and newlines)
-    let sanitized = String(value);
-    // Remove null bytes and control characters (except newlines)
-    sanitized = sanitized.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
-    // Trim only leading/trailing whitespace (not spaces in the middle)
+  const sanitizeInput = (value, maxLength = null) => {
+    let sanitized = stripUnsafe(value, true);
     sanitized = sanitized.trim();
-    // Limit length
     if (maxLength && sanitized.length > maxLength) {
       sanitized = sanitized.substring(0, maxLength);
     }
@@ -51,32 +52,28 @@ const ContactUs = () => {
     // Minimal sanitization in real-time (preserve spaces for name and message)
     let sanitizedValue = value;
     if (name === 'name') {
-      // Only remove dangerous control chars, preserve spaces
-      sanitizedValue = String(value).replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+      sanitizedValue = stripUnsafe(value);
       if (sanitizedValue.length > 200) {
         sanitizedValue = sanitizedValue.substring(0, 200);
       }
     } else if (name === 'email') {
-      // Remove dangerous chars and convert to lowercase
-      sanitizedValue = String(value).replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '').toLowerCase();
+      sanitizedValue = stripUnsafe(value).toLowerCase();
       if (sanitizedValue.length > 254) {
         sanitizedValue = sanitizedValue.substring(0, 254);
       }
     } else if (name === 'phone') {
-      // Remove dangerous chars
-      sanitizedValue = String(value).replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+      sanitizedValue = stripUnsafe(value);
       if (sanitizedValue.length > 20) {
         sanitizedValue = sanitizedValue.substring(0, 20);
       }
     } else if (name === 'subject') {
-      // Remove dangerous chars
-      sanitizedValue = String(value).replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+      sanitizedValue = stripUnsafe(value);
       if (sanitizedValue.length > 100) {
         sanitizedValue = sanitizedValue.substring(0, 100);
       }
     } else if (name === 'message') {
-      // Allow newlines and spaces in message, but sanitize other control chars
-      sanitizedValue = String(value).replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+      // Allow newlines and spaces in message
+      sanitizedValue = stripUnsafe(value, true);
       if (sanitizedValue.length > 5000) {
         sanitizedValue = sanitizedValue.substring(0, 5000);
       }
