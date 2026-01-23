@@ -1,0 +1,11 @@
+# Ignore backend/server files so Vercel treats this as a pure frontend project
+ccb_portal_backend/
+manage.py
+requirements.txt
+build.sh
+render.yaml
+migrations/
+portal/
+templates/
+static/
+start_development.py
