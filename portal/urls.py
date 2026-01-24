@@ -2,7 +2,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
-    path('', views.ReactAppView.as_view(), name='index'),
+    path('', views.api_status, name='index'),
     path('api/test/', views.api_test, name='api_test'),
     
     # Public API endpoints

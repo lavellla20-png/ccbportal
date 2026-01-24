@@ -25,6 +25,33 @@ from .utils import build_safe_media_url, build_production_media_url, sanitize_in
 import os
 import uuid
 
+def api_status(request):
+    """API status endpoint for the root URL"""
+    return JsonResponse({
+        'status': 'success',
+        'message': 'CCB Portal Backend is running!',
+        'version': '1.0.0',
+        'endpoints': {
+            'admin': '/admin/',
+            'api_test': '/api/test/',
+            'academic_programs': '/api/academic-programs/',
+            'news_events': '/api/news-events/',
+            'announcements': '/api/announcements/',
+            'events': '/api/events/',
+            'achievements': '/api/achievements/',
+            'admissions_info': '/api/admissions-info/',
+            'downloads': '/api/downloads/',
+            'contact_form': '/api/contact-form/',
+            'departments': '/api/departments/',
+            'personnel': '/api/personnel/',
+            'news': '/api/news/',
+            'institutional_info': '/api/institutional-info/',
+        },
+        'frontend': 'https://ccb-portal-frontend.onrender.com',
+        'backend': 'https://ccb-portal-backend.onrender.com',
+        'documentation': 'Visit /admin/ for Django Admin Interface'
+    })
+
 
 def login_required_json(view_func):
     """Custom decorator that returns JSON error for unauthenticated users instead of redirecting"""
