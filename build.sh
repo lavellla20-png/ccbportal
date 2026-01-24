@@ -5,6 +5,9 @@ set -o errexit
 # Install Python dependencies
 pip install -r requirements.txt
 
+# Create static files directory if it doesn't exist
+mkdir -p staticfiles
+
 # Collect static files
 python manage.py collectstatic --no-input
 

@@ -47,17 +47,21 @@ cloudinary_config(
     api_secret=CLOUDINARY_API_SECRET
 )
 
-# Cloudinary storage configuration
+# Cloudinary storage configuration - Only for media files (images)
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticCloudinaryStorage'
 
 # Media files configuration for Cloudinary
 MEDIA_URL = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/'
 MEDIA_ROOT = ''  # Not used with Cloudinary
 
-# Static files configuration
-STATIC_URL = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/static/'
-STATIC_ROOT = ''  # Not used with Cloudinary
+# Static files configuration - Keep local for CSS, JS, etc.
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Ensure static files directory exists
+import os
+os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # Email configuration (using Brevo)
 EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
