@@ -14,49 +14,9 @@ class AnnouncementAdmin(admin.ModelAdmin):
     search_fields = ('title', 'body', 'details')
     ordering = ('display_order', '-date')
 
-@admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'event_date', 'start_time', 'end_time', 'location', 'is_active', 'display_order')
-    list_filter = ('is_active', 'event_date')
-    search_fields = ('title', 'description', 'details', 'location')
-    ordering = ('display_order', 'event_date', 'start_time')
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('title', 'description', 'details')
-        }),
-        ('Image', {
-            'fields': ('image',)
-        }),
-        ('Date & Time', {
-            'fields': ('event_date', 'start_time', 'end_time')
-        }),
-        ('Additional Information', {
-            'fields': ('location', 'is_active', 'display_order')
-        }),
-    )
-    pass
+admin.site.register(Event)
 
-@admin.register(Achievement)
-class AchievementAdmin(admin.ModelAdmin):
-    list_display = ('title', 'achievement_date', 'category', 'is_active', 'display_order')
-    list_filter = ('is_active', 'achievement_date', 'category')
-    search_fields = ('title', 'description', 'details', 'category')
-    ordering = ('display_order', '-achievement_date')
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('title', 'description', 'details')
-        }),
-        ('Image', {
-            'fields': ('image',)
-        }),
-        ('Date & Category', {
-            'fields': ('achievement_date', 'category')
-        }),
-        ('Display Settings', {
-            'fields': ('is_active', 'display_order')
-        }),
-    )
-    pass
+admin.site.register(Achievement)
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
