@@ -4,7 +4,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/footer';
 import SEO from './components/SEO';
 import apiService from './services/api';
-import { normalizeImageUrl } from './utils/imageUtils';
+import { normalizeImageUrl, buildSrcSet } from './utils/imageUtils';
 import './news_events.css';
 
 const NewsEvents = () => {
@@ -1028,7 +1028,7 @@ const NewsEvents = () => {
                           <div key={event.id} className="event-item">
                             {event.image ? (
                               <div className="event-image-wrapper">
-                                <img src={normalizeImageUrl(event.image)} alt={event.title} loading="lazy" />
+                                <img src={normalizeImageUrl(event.image)} srcSet={buildSrcSet(event.image)} sizes="(max-width: 768px) 100vw, 50vw" alt={event.title} loading="lazy" />
                                 <div className="event-date-overlay">
                                   <div className="event-date">
                                     <span className="day">{formatEventDate(event.event_date).day}</span>
@@ -1080,7 +1080,7 @@ const NewsEvents = () => {
                           <div key={item.id} className="news-item">
                             {item.image ? (
                               <div className="news-image-wrapper">
-                                <img src={normalizeImageUrl(item.image)} alt={item.title} loading="lazy" />
+                                <img src={normalizeImageUrl(item.image)} srcSet={buildSrcSet(item.image)} sizes="(max-width: 768px) 100vw, 33vw" alt={item.title} loading="lazy" />
                               </div>
                             ) : (
                               <div className="news-image-placeholder">
@@ -1119,7 +1119,7 @@ const NewsEvents = () => {
                           <div key={item.id} className="announcement-item">
                             {item.image ? (
                               <div className="announcement-image-wrapper">
-                                <img src={normalizeImageUrl(item.image)} alt={item.title} loading="lazy" />
+                                <img src={normalizeImageUrl(item.image)} srcSet={buildSrcSet(item.image)} sizes="(max-width: 768px) 100vw, 33vw" alt={item.title} loading="lazy" />
                               </div>
                             ) : (
                               <div className="announcement-image-placeholder">
@@ -1203,7 +1203,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeModal}>×</button>
             {selectedAnnouncement.image && (
               <div className="modal-image-wrapper">
-                <img src={normalizeImageUrl(selectedAnnouncement.image)} alt={selectedAnnouncement.title} />
+                <img src={normalizeImageUrl(selectedAnnouncement.image)} srcSet={buildSrcSet(selectedAnnouncement.image)} sizes="100vw" alt={selectedAnnouncement.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedAnnouncement.title}</h3>
@@ -1226,7 +1226,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeEventModal}>×</button>
             {selectedEvent.image && (
               <div className="modal-image-wrapper">
-                <img src={normalizeImageUrl(selectedEvent.image)} alt={selectedEvent.title} />
+                <img src={normalizeImageUrl(selectedEvent.image)} srcSet={buildSrcSet(selectedEvent.image)} sizes="100vw" alt={selectedEvent.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedEvent.title}</h3>
@@ -1254,7 +1254,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeAchievementModal}>×</button>
             {selectedAchievement.image && (
               <div className="modal-image-wrapper">
-                <img src={normalizeImageUrl(selectedAchievement.image)} alt={selectedAchievement.title} />
+                <img src={normalizeImageUrl(selectedAchievement.image)} srcSet={buildSrcSet(selectedAchievement.image)} sizes="100vw" alt={selectedAchievement.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedAchievement.title}</h3>
@@ -1278,7 +1278,7 @@ const NewsEvents = () => {
             <button className="modal-close" aria-label="Close" onClick={closeNewsModal}>×</button>
             {selectedNews.image && (
               <div className="modal-image-wrapper">
-                <img src={normalizeImageUrl(selectedNews.image)} alt={selectedNews.title} />
+                <img src={normalizeImageUrl(selectedNews.image)} srcSet={buildSrcSet(selectedNews.image)} sizes="100vw" alt={selectedNews.title} />
               </div>
             )}
             <h3 className="modal-title">{selectedNews.title}</h3>
@@ -1414,4 +1414,3 @@ const NewsEvents = () => {
 };
 
 export default NewsEvents;
-

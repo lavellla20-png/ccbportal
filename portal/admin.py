@@ -24,6 +24,9 @@ class EventAdmin(admin.ModelAdmin):
         ('Basic Information', {
             'fields': ('title', 'description', 'details')
         }),
+        ('Image', {
+            'fields': ('image',)
+        }),
         ('Date & Time', {
             'fields': ('event_date', 'start_time', 'end_time')
         }),
@@ -31,6 +34,32 @@ class EventAdmin(admin.ModelAdmin):
             'fields': ('location', 'is_active', 'display_order')
         }),
     )
+    fields = ('title', 'description', 'details', 'image', 'event_date', 'start_time', 'end_time', 'location', 'is_active', 'display_order')
+    from django import forms
+    form = type('EventAdminForm', (forms.ModelForm,), {
+        'Meta': type('Meta', (), {'model': Event, 'fields': '__all__'}),
+        'clean_image': lambda self: self.cleaned_data.get('image')
+    })
+
+    def save_model(self, request, obj, form, change):
+        old_image = None
+        if change and obj.pk:
+            try:
+                old = Event.objects.get(pk=obj.pk)
+                old_image = old.image
+            except Event.DoesNotExist:
+                old_image = None
+        try:
+            super().save_model(request, obj, form, change)
+        except Exception as e:
+            if old_image is not None:
+                obj.image = old_image
+                super().save_model(request, obj, form, change)
+            else:
+                obj.image = None
+                super().save_model(request, obj, form, change)
+            from django.contrib import messages
+            messages.error(request, f"Image upload error: {e}")
 
 @admin.register(Achievement)
 class AchievementAdmin(admin.ModelAdmin):
@@ -42,6 +71,9 @@ class AchievementAdmin(admin.ModelAdmin):
         ('Basic Information', {
             'fields': ('title', 'description', 'details')
         }),
+        ('Image', {
+            'fields': ('image',)
+        }),
         ('Date & Category', {
             'fields': ('achievement_date', 'category')
         }),
@@ -49,6 +81,32 @@ class AchievementAdmin(admin.ModelAdmin):
             'fields': ('is_active', 'display_order')
         }),
     )
+    fields = ('title', 'description', 'details', 'image', 'achievement_date', 'category', 'is_active', 'display_order')
+    from django import forms
+    form = type('AchievementAdminForm', (forms.ModelForm,), {
+        'Meta': type('Meta', (), {'model': Achievement, 'fields': '__all__'}),
+        'clean_image': lambda self: self.cleaned_data.get('image')
+    })
+
+    def save_model(self, request, obj, form, change):
+        old_image = None
+        if change and obj.pk:
+            try:
+                old = Achievement.objects.get(pk=obj.pk)
+                old_image = old.image
+            except Achievement.DoesNotExist:
+                old_image = None
+        try:
+            super().save_model(request, obj, form, change)
+        except Exception as e:
+            if old_image is not None:
+                obj.image = old_image
+                super().save_model(request, obj, form, change)
+            else:
+                obj.image = None
+                super().save_model(request, obj, form, change)
+            from django.contrib import messages
+            messages.error(request, f"Image upload error: {e}")
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):

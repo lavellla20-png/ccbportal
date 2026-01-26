@@ -1,18 +1,18 @@
-import React from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from './components/ErrorBoundary';
 import ChatbotWidget from './components/ChatbotWidget';
-import HomePage from './HomePage';
-import AcademicPrograms from './academicprogram';
-import Students from './students';
-import FacultyStaff from './faculty_staff';
-import AboutUs from './aboutus';
-import Admissions from './admissions';
-import NewsEvents from './news_events';
-import Downloads from './downloads';
-import ContactUs from './contactuss';
-import CCBlogo from './CCBlogo';
+const HomePage = lazy(() => import('./HomePage'));
+const AcademicPrograms = lazy(() => import('./academicprogram'));
+const Students = lazy(() => import('./students'));
+const FacultyStaff = lazy(() => import('./faculty_staff'));
+const AboutUs = lazy(() => import('./aboutus'));
+const Admissions = lazy(() => import('./admissions'));
+const NewsEvents = lazy(() => import('./news_events'));
+const Downloads = lazy(() => import('./downloads'));
+const ContactUs = lazy(() => import('./contactuss'));
+const CCBlogo = lazy(() => import('./CCBlogo'));
 import Admin from './admin/admin';
 
 function App() {
@@ -20,6 +20,7 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <Router>
+          <Suspense fallback={<div style={{padding:'2rem',textAlign:'center'}}>Loading…</div>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/admin" element={<Admin />} />
@@ -33,6 +34,7 @@ function App() {
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/ccb-logo" element={<CCBlogo />} />
           </Routes>
+          </Suspense>
           <ChatbotWidget />
         </Router>
       </HelmetProvider>

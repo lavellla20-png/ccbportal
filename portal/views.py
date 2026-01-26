@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login
 from django.core.paginator import Paginator
@@ -507,6 +508,7 @@ def api_downloads(request):
 
 
 @require_http_methods(["GET"])
+@cache_page(60)
 def api_announcements(request):
     """Return active announcements"""
     try:
@@ -717,6 +719,7 @@ def api_delete_announcement(request, announcement_id):
 
 
 @require_http_methods(["GET"])
+@cache_page(60)
 def api_events(request):
     """Return active events"""
     try:
@@ -747,6 +750,7 @@ def api_events(request):
 
 
 @require_http_methods(["GET"])
+@cache_page(60)
 def api_achievements(request):
     """Return active achievements"""
     try:
@@ -3822,10 +3826,16 @@ def api_delete_news(request, news_id):
 
 # Public API endpoint for News
 @require_http_methods(["GET"])
+@cache_page(60)
 def api_news(request):
     """Get all active news articles"""
     try:
-        news_list = News.objects.filter(is_active=True).order_by('display_order', '-date')
+        page = int(request.GET.get('page', '1') or '1')
+        page_size = int(request.GET.get('page_size', '50') or '50')
+        qs = News.objects.filter(is_active=True).order_by('display_order', '-date')
+        start = max((page - 1) * page_size, 0)
+        end = start + page_size
+        news_list = qs[start:end]
         news_data = []
         for news in news_list:
             news_item = {
@@ -3842,11 +3852,8 @@ def api_news(request):
                 news_item['image'] = None
             news_data.append(news_item)
         
-        return JsonResponse({
-            'status': 'success',
-            'news': news_data,
-            'count': len(news_data)
-        })
+        total = qs.count()
+        return JsonResponse({'status': 'success', 'news': news_data, 'count': total, 'page': page, 'page_size': page_size})
     except Exception as e:
         return JsonResponse({
             'status': 'error',

@@ -15,7 +15,25 @@ export const normalizeImageUrl = (imageUrl) => {
   
   // If it's already an absolute URL with http/https, return as is
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
+    try {
+      const u = new URL(imageUrl);
+      if (u.hostname.includes('res.cloudinary.com')) {
+        const parts = u.pathname.split('/');
+        const idx = parts.findIndex((p) => p === 'upload');
+        if (idx !== -1) {
+          const transform = 'f_auto,q_auto';
+          const next = parts[idx + 1] || '';
+          if (!next.includes('f_') && !next.includes('q_')) {
+            parts.splice(idx + 1, 0, transform);
+            u.pathname = parts.join('/');
+            return u.toString();
+          }
+        }
+      }
+      return imageUrl;
+    } catch (_) {
+      return imageUrl;
+    }
   }
   
   // Get backend URL from environment variable (without /api suffix for media files)
@@ -34,5 +52,30 @@ export const normalizeImageUrl = (imageUrl) => {
     console.warn('Failed to parse image URL:', imageUrl, error);
     // Fallback: prepend backend URL
     return `${BACKEND_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  }
+};
+
+export const buildSrcSet = (url, widths = [320, 480, 768, 1024, 1280]) => {
+  if (!url) return '';
+  try {
+    const u = new URL(normalizeImageUrl(url));
+    if (!u.hostname.includes('res.cloudinary.com')) return '';
+    return widths.map((w) => {
+      const parts = u.pathname.split('/');
+      const idx = parts.findIndex((p) => p === 'upload');
+      if (idx === -1) return null;
+      const t = 'f_auto,q_auto,c_limit,w_' + w;
+      const next = parts[idx + 1] || '';
+      const newParts = [...parts];
+      if (next.includes('w_') || next.includes('c_') || next.includes('f_') || next.includes('q_')) {
+        newParts[idx + 1] = t;
+      } else {
+        newParts.splice(idx + 1, 0, t);
+      }
+      const p = newParts.join('/');
+      return `${u.origin}${p} ${w}w`;
+    }).filter(Boolean).join(', ');
+  } catch (_) {
+    return '';
   }
 };
