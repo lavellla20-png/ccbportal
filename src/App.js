@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from './components/ErrorBoundary';
 import ChatbotWidget from './components/ChatbotWidget';
+import Admin from './admin/admin';
 const HomePage = lazy(() => import('./HomePage'));
 const AcademicPrograms = lazy(() => import('./academicprogram'));
 const Students = lazy(() => import('./students'));
@@ -13,7 +14,6 @@ const NewsEvents = lazy(() => import('./news_events'));
 const Downloads = lazy(() => import('./downloads'));
 const ContactUs = lazy(() => import('./contactuss'));
 const CCBlogo = lazy(() => import('./CCBlogo'));
-import Admin from './admin/admin';
 
 function App() {
   return (

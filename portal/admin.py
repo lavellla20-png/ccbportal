@@ -34,7 +34,6 @@ class EventAdmin(admin.ModelAdmin):
             'fields': ('location', 'is_active', 'display_order')
         }),
     )
-    fields = ('title', 'description', 'details', 'image', 'event_date', 'start_time', 'end_time', 'location', 'is_active', 'display_order')
     from django import forms
     form = type('EventAdminForm', (forms.ModelForm,), {
         'Meta': type('Meta', (), {'model': Event, 'fields': '__all__'}),
@@ -81,7 +80,6 @@ class AchievementAdmin(admin.ModelAdmin):
             'fields': ('is_active', 'display_order')
         }),
     )
-    fields = ('title', 'description', 'details', 'image', 'achievement_date', 'category', 'is_active', 'display_order')
     from django import forms
     form = type('AchievementAdminForm', (forms.ModelForm,), {
         'Meta': type('Meta', (), {'model': Achievement, 'fields': '__all__'}),
