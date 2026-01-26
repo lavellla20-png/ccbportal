@@ -427,7 +427,7 @@ const Navbar = ({ isTopBarVisible = true, isHomePage = false }) => {
             >
               <button
                 type="button"
-                className="nav-link services-nav-link"
+                className={`nav-link services-nav-link ${isServicesDropdownOpen ? 'active-nav' : ''}`}
                 aria-haspopup="true"
                 aria-expanded={isServicesDropdownOpen}
                 onClick={() => {

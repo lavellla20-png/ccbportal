@@ -286,6 +286,18 @@
   gap: 4px;
 }
 
+/* Ensure services button looks identical to links */
+.services-nav-link {
+  border: 0;
+  background: transparent;
+  appearance: none;
+  line-height: 1;
+}
+
+.services-nav-link:focus {
+  outline: none;
+}
+
 .dropdown-arrow {
   font-size: 10px;
   margin-left: 6px;
