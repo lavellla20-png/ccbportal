@@ -36,9 +36,10 @@ import cloudinary
 from cloudinary import config as cloudinary_config
 
 # Configure Cloudinary from environment variables
-CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'your-cloud-name')
-CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', 'your-api-key')
-CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', 'your-api-secret')
+# We use strip() to remove any accidental whitespace from copy-pasting
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'your-cloud-name').strip()
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', 'your-api-key').strip()
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', 'your-api-secret').strip()
 
 # Initialize Cloudinary SDK directly (for direct usage)
 cloudinary_config(
@@ -53,6 +54,9 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
     'API_KEY': CLOUDINARY_API_KEY,
     'API_SECRET': CLOUDINARY_API_SECRET,
+    'SECURE_URL': True,
+    'MEDIA_TAG': 'media',
+    'STATIC_TAG': 'static',
 }
 
 # Cloudinary storage configuration - Only for media files (images)
