@@ -64,8 +64,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'portal',
     'anymail',
-    'cloudinary_storage',
     'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
