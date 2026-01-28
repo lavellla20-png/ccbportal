@@ -117,13 +117,24 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 # Database configuration (PostgreSQL from Render)
 if not DEBUG:
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+    db_url = os.getenv('DATABASE_URL')
+    if db_url and 'mysql' in db_url:
+         DATABASES = {
+            'default': dj_database_url.config(
+                default=db_url,
+                conn_max_age=600,
+                conn_health_checks=True,
+                engine='django.db.backends.mysql'
+            )
+        }
+    else:
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=db_url,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
 
 # Logging configuration for production
 LOGGING = {

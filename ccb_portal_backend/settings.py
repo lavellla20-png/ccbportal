@@ -123,13 +123,26 @@ if DEBUG:
     }
 else:
     # Production - PostgreSQL from Render
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=get_env_variable('DATABASE_URL', required=True),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+    db_url = get_env_variable('DATABASE_URL', required=True)
+    if 'mysql' in db_url:
+        # If using MySQL in production (e.g. Cleardb/JawsDB)
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=db_url,
+                conn_max_age=600,
+                conn_health_checks=True,
+                engine='django.db.backends.mysql'
+            )
+        }
+    else:
+        # PostgreSQL (Render default)
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=db_url,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
 
 
 # Password validation
