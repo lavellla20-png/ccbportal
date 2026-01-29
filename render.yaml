@@ -19,10 +19,10 @@ services:
         value: "False"
       - key: PUBLIC_BASE_URL
         sync: false
-        value: "https://ccbeacademyportal-backend.onrender.com"
+        value: "https://ccb-eacademy-backend.onrender.com"
       - key: CORS_ALLOWED_ORIGINS
         sync: false
-        value: "https://ccbeacademyportal-frontend.onrender.com,https://ccb-eacademy.onrender.com"
+        value: "https://ccb-eacademy.onrender.com"
       - key: ALLOWED_HOSTS
         sync: false
         value: "*"
@@ -49,7 +49,7 @@ services:
 
   # React Frontend Static Site
   - type: web
-    name: ccb-eacademy-frontend
+    name: ccb-eacademy
     env: static
     region: oregon
     plan: free
@@ -59,7 +59,7 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         sync: false
-        value: "https://ccbeacademyportal-backend.onrender.com"
+        value: "https://ccb-eacademy-backend.onrender.com"
       - key: CI
         value: "false"
       - key: GENERATE_SOURCEMAP
