@@ -495,20 +495,20 @@ const Navbar = ({ isTopBarVisible = true, isHomePage = false }) => {
                 </a>
               </div>
             </div>
-            <a
-              href="/news"
+            <Link
+              to="/news"
               className={getActiveNavClass("/news")}
               onClick={handleNavLinkClick}
             >
               NEWS & EVENTS
-            </a>
-            <a
-              href="/downloads"
+            </Link>
+            <Link
+              to="/downloads"
               className={getActiveNavClass("/downloads")}
               onClick={handleNavLinkClick}
             >
               DOWNLOADS
-            </a>
+            </Link>
 
             {/* Search icon with hover popover */}
             <div className="nav-search">
