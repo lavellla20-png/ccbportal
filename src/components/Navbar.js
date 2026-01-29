@@ -257,14 +257,14 @@ const Navbar = ({ isTopBarVisible = true, isHomePage = false }) => {
     : "main-nav with-bg";
 
   // Check if we're on the academic, admissions, news_events, downloads, students, faculty_staff, aboutus, or contactus page
-  const isAcademicPage = window.location.pathname === "/academics" || window.location.pathname.startsWith("/academics");
-  const isAdmissionsPage = window.location.pathname === "/admissions" || window.location.pathname.startsWith("/admissions");
-  const isNewsEventsPage = window.location.pathname === "/news" || window.location.pathname.startsWith("/news");
-  const isDownloadsPage = window.location.pathname === "/downloads" || window.location.pathname.startsWith("/downloads");
-  const isStudentsPage = window.location.pathname === "/students" || window.location.pathname.startsWith("/students");
-  const isFacultyStaffPage = window.location.pathname === "/faculty-staff" || window.location.pathname.startsWith("/faculty-staff");
-  const isAboutUsPage = window.location.pathname === "/about" || window.location.pathname.startsWith("/about");
-  const isContactUsPage = window.location.pathname === "/contact" || window.location.pathname.startsWith("/contact");
+  const isAcademicPage = activePage === "/academics" || activePage.startsWith("/academics");
+  const isAdmissionsPage = activePage === "/admissions" || activePage.startsWith("/admissions");
+  const isNewsEventsPage = activePage === "/news" || activePage.startsWith("/news");
+  const isDownloadsPage = activePage === "/downloads" || activePage.startsWith("/downloads");
+  const isStudentsPage = activePage === "/students" || activePage.startsWith("/students");
+  const isFacultyStaffPage = activePage === "/faculty-staff" || activePage.startsWith("/faculty-staff");
+  const isAboutUsPage = activePage === "/about" || activePage.startsWith("/about");
+  const isContactUsPage = activePage === "/contact" || activePage.startsWith("/contact");
 
   return (
     <nav className={`navbar ${isHomePage ? (isAcademicPage ? "academic-page-navbar homepage-navbar" : isAdmissionsPage ? "admissions-page-navbar homepage-navbar" : isNewsEventsPage ? "news-events-page-navbar homepage-navbar" : isDownloadsPage ? "downloads-page-navbar homepage-navbar" : isStudentsPage ? "students-page-navbar homepage-navbar" : isFacultyStaffPage ? "faculty-staff-page-navbar homepage-navbar" : isAboutUsPage ? "aboutus-page-navbar homepage-navbar" : isContactUsPage ? "contactus-page-navbar homepage-navbar" : "homepage-navbar") : ""}`}>
