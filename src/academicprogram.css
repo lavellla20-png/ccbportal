@@ -90,7 +90,7 @@
     align-items: center;
     justify-content: center;
     min-height: 500px;
-    margin-top: 88px;
+    margin-top: 0;
   }
   
   .academics-hero::before {
@@ -980,12 +980,12 @@
   @media (max-width: 480px) {
     .academics-hero {
       padding: 90px 0 50px;
-      margin-top: 100px;
+      margin-top: 0;
       min-height: 350px;
     }
     
     .academics-hero.navbar-collapsed {
-      margin-top: 48px;
+      margin-top: 0;
     }
     
     .hero-title {
