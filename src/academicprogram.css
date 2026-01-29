@@ -813,9 +813,8 @@
   @media (min-width: 769px) and (max-width: 1024px) {
     .academics-hero {
       padding: 110px 0 70px;
-      margin-top: 0;
-      height: 445px !important;
-      min-height: unset;
+      margin-top: 88px;
+      min-height: 450px;
     }
 
     .academics-hero.navbar-collapsed {
@@ -980,9 +979,9 @@
   /* Responsive Design - Small Mobile (max-width: 480px) */
   @media (max-width: 480px) {
     .academics-hero {
-      padding: 90px 0 50px;
+      padding: 80px 0 50px;
       margin-top: 0;
-      min-height: 350px;
+      height: 300px !important;
     }
     
     .academics-hero.navbar-collapsed {
